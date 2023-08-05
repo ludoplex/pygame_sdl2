@@ -11,13 +11,11 @@ from helpers import ProgressIndicator
 ################################################################################
 
 def get_cmd_str(cmd):
-    if isinstance(cmd, str): 
-        return cmd
-    else:
+    if not isinstance(cmd, str):
         cmd = [c for c in cmd if c]
         if sys.platform == 'win32': cmd = subprocess.list2cmdline(cmd)
         else: cmd = ' '.join(cmd)
-        return cmd
+    return cmd
 
 def log_cmd(cmd, dir):
     print "executing:", cmd, 'from dir', os.path.abspath(dir or os.getcwd())
@@ -28,7 +26,7 @@ def ExecuteAssertSuccess(cmd, *args, **keywords):
     retcode, output = GetReturnCodeAndOutput(cmd, *args, **keywords)
     if retcode != 0:
         cmd_line = get_cmd_str(cmd)
-        raise Exception("calling: "+cmd_line+" failed with output:\n"+output)
+        raise Exception(f"calling: {cmd_line}" + " failed with output:\n" + output)
     return retcode, output
 
 ################################################################################

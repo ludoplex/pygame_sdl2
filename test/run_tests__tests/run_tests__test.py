@@ -28,10 +28,10 @@ def norm_result(result):
 def call_proc(cmd, cd=None):
     proc = subprocess.Popen (
         cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd = cd,
-	universal_newlines = True,
+    universal_newlines = True,
     )
     if proc.wait():
-        print ("%s %s" % (cmd, proc.wait()))
+        print(f"{cmd} {proc.wait()}")
         raise Exception(proc.stdout.read())
 
     return proc.stdout.read()
@@ -62,10 +62,10 @@ test_suite_dirs = [x for x in os.listdir(main_dir)
 ################################################################################
 
 def assert_on_results(suite, single, sub):
-    test = globals().get('%s_test' % suite)
+    test = globals().get(f'{suite}_test')
     if hasattr(test, '__call_'):
         test(suite, single, sub)
-        print ("assertions on %s OK" % (suite,))
+        print(f"assertions on {suite} OK")
 
 def incomplete_test(suite, *args):
     for results in args:
@@ -108,8 +108,8 @@ for suite in test_suite_dirs:
         print ('%s suite comparison FAILED\n' % (suite,))
     else:
         passes += 1
-        print ('%s suite comparison OK' % (suite,))
-    
+        print(f'{suite} suite comparison OK')
+
     assert_on_results(suite, single, subs)
 
     if verbose or failed:

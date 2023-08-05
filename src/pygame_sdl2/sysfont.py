@@ -432,21 +432,6 @@ def initsysfonts_darwin():
 
 
 
-
-    paths = ['/Library/Fonts',
-             '~/Library/Fonts',
-             '/Local/Library/Fonts',
-             '/Network/Library/Fonts']
-    fonts = {}
-    for p in paths:
-        if os.path.isdir(p):
-            pass
-            #os.path.walk(p, _fontwalk, fonts)
-    return fonts
-
-
-
-
 #read the fonts on unix
 def initsysfonts_unix(path = "fc-list"):
     import subprocess
@@ -457,9 +442,13 @@ def initsysfonts_unix(path = "fc-list"):
 
     try:
         # note, we capture stderr so if fc-list isn't there to stop stderr printing.
-        flout, flerr = subprocess.Popen('%s : file family style' % path, shell=True,
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        close_fds=True).communicate()
+        flout, flerr = subprocess.Popen(
+            f'{path} : file family style',
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=True,
+        ).communicate()
     except Exception:
         return fonts
 

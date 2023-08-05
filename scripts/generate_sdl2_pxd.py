@@ -55,13 +55,7 @@ def name_filter(name):
     if name.startswith("SDL_dummy"):
         return False
 
-    if name.startswith("SDL_DUMMY"):
-        return False
-
-    if name.startswith("SDL"):
-        return True
-
-    return False
+    return False if name.startswith("SDL_DUMMY") else bool(name.startswith("SDL"))
 
 def check_name(n):
     """
@@ -74,11 +68,7 @@ def check_name(n):
     if isinstance(name, basestring):
         return name_filter(name)
 
-    for _, node in n.children():
-        if check_name(node):
-            return True
-
-    return False
+    return any(check_name(node) for _, node in n.children())
 
 
 cgen = pycparser.c_generator.CGenerator()
@@ -110,12 +100,8 @@ def anonymous(n):
     else:
         raise Exception("unknown node")
 
-    if n.name:
-        name = n.name
-    else:
-        name = "anon"
-
-    return "{}_{}_{}".format(name, kind, anonymous_serial)
+    name = n.name if n.name else "anon"
+    return f"{name}_{kind}_{anonymous_serial}"
 
 # The file we write generated code to.
 output = None
@@ -129,9 +115,9 @@ class Writer(object):
         self.rest.append(s)
 
     def write(self):
-        output.write("    " + self.first + "\n")
+        output.write(f"    {self.first}" + "\n")
         for i in self.rest:
-            output.write("        " + i + "\n")
+            output.write(f"        {i}" + "\n")
 
         output.write("\n")
 
@@ -144,10 +130,7 @@ def remove_modifiers(n):
         remove_modifiers(node)
 
     if hasattr(n, "quals"):
-        if "const" in n.quals:
-            n.quals = [ "const" ]
-        else:
-            n.quals = [ ]
+        n.quals = [ "const" ] if "const" in n.quals else [ ]
     if hasattr(n, "storage"):
         n.storage = [ ]
 
@@ -195,14 +178,14 @@ def generate_struct_or_union(kind, n, ckind, name):
         return
 
     if n.decls:
-        w = Writer("{}{} {}:".format(ckind, kind, name))
+        w = Writer(f"{ckind}{kind} {name}:")
 
         for i in n.decls:
             i = reorganize_decl(i)
             w.add(cython_from_c(i))
 
     else:
-        w = Writer("{}{} {}".format(ckind, kind, name))
+        w = Writer(f"{ckind}{kind} {name}")
 
     w.write()
 
@@ -230,7 +213,7 @@ def generate_decl(n, ckind='', name=None):
         n.quals = [ ]
 
         if not generate_decl(n.type, ckind, name):
-            w = Writer("{}{}".format(ckind, cython_from_c(n)))
+            w = Writer(f"{ckind}{cython_from_c(n)}")
             w.write()
 
     elif isinstance(n, c_ast.Decl):
@@ -240,7 +223,7 @@ def generate_decl(n, ckind='', name=None):
         n.storage = [ ]
 
         if not generate_decl(n.type, ckind, name):
-            w = Writer("{}{}".format(ckind, cython_from_c(n)))
+            w = Writer(f"{ckind}{cython_from_c(n)}")
             w.write()
 
     elif isinstance(n, c_ast.TypeDecl):
@@ -265,11 +248,7 @@ def generate_decl(n, ckind='', name=None):
         if not name:
             name = n.name
 
-        if name:
-            w = Writer('{}enum {}:'.format(ckind, name))
-        else:
-            w = Writer('{} enum:'.format(ckind, name))
-
+        w = Writer(f'{ckind}enum {name}:') if name else Writer(f'{ckind} enum:')
         names = [ ]
 
         for i in n.values.enumerators:
@@ -335,7 +314,7 @@ def auto_defines(dirname):
                 if not m:
                     continue
 
-                name = m.group(1)
+                name = m[1]
 
                 if name in defines:
                     continue
@@ -351,7 +330,7 @@ def auto_defines(dirname):
 
     output.write('    cdef enum:\n')
     for i in defines:
-        output.write('        ' + i + "\n")
+        output.write(f'        {i}' + "\n")
 
 PREAMBLE = """\
 from libc.stdint cimport *
@@ -380,23 +359,20 @@ def main():
     subprocess.check_call(["gcc", "-E", "-I/usr/include/SDL2",  "-D_REENTRANT", "sdl2.c", "-o",  "sdl2.i"])
 
     global output
-    output = open("include/sdl2.pxd", "w")
+    with open("include/sdl2.pxd", "w") as output:
+        a = pycparser.parse_file("sdl2.i")
 
-    a = pycparser.parse_file("sdl2.i")
+        output.write(PREAMBLE)
 
-    output.write(PREAMBLE)
+        for n in a.ext:
+            # n.show(nodenames=True, attrnames=True)
+            if check_name(n):
+                remove_modifiers(n)
+                generate_decl(n, '')
 
-    for n in a.ext:
-        # n.show(nodenames=True, attrnames=True)
-        if check_name(n):
-            remove_modifiers(n)
-            generate_decl(n, '')
+        auto_defines("/usr/include/SDL2")
 
-    auto_defines("/usr/include/SDL2")
-
-    output.write(POSTAMBLE)
-
-    output.close()
+        output.write(POSTAMBLE)
 
     with open("include/enums.json", "w") as f:
         json.dump(enums, f, indent=4)

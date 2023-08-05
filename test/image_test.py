@@ -31,11 +31,9 @@ def test_magic(f, magic_hex):
     if len(data) != len(magic_hex):
         return 0
 
-    for i in range(len(magic_hex)):
-        if magic_hex[i] != ord_(data[i]):
-            return 0
-    
-    return 1
+    return next(
+        (0 for i in range(len(magic_hex)) if magic_hex[i] != ord_(data[i])), 1
+    )
 
 
 class ImageModuleTest( unittest.TestCase ):
@@ -81,11 +79,8 @@ class ImageModuleTest( unittest.TestCase ):
         self.assertEquals(pixel_x0_y1, bluish_pixel)
         self.assertEquals(pixel_x1_y1, greyish_pixel)
 
-        # Read the PNG file obj. and verify that pygame interprets it correctly
-        f = open(f_path, 'rb')
-        surf = pygame.image.load(f)
-        f.close()
-
+        with open(f_path, 'rb') as f:
+            surf = pygame.image.load(f)
         pixel_x0_y0 = surf.get_at((0, 0))
         pixel_x1_y0 = surf.get_at((1, 0))
         pixel_x0_y1 = surf.get_at((0, 1))
@@ -134,10 +129,7 @@ class ImageModuleTest( unittest.TestCase ):
 
         # Read the PNG file and verify that pygame saved it correctly
         width, height, pixels, metadata = png.Reader(filename=f_path).asRGBA8()
-        pixels_as_tuples = []
-        for pixel in pixels:
-            pixels_as_tuples.append(tuple(pixel))
-
+        pixels_as_tuples = [tuple(pixel) for pixel in pixels]
         self.assertEquals(pixels_as_tuples[0], reddish_pixel)
         self.assertEquals(pixels_as_tuples[1], greenish_pixel)
         self.assertEquals(pixels_as_tuples[2], bluish_pixel)
@@ -149,20 +141,19 @@ class ImageModuleTest( unittest.TestCase ):
 
         s = pygame.Surface((10,10))
         s.fill((23,23,23))
-        magic_hex = {}
-        magic_hex['jpg'] = [0xff, 0xd8, 0xff, 0xe0]
-        magic_hex['png'] = [0x89 ,0x50 ,0x4e ,0x47]
-        magic_hex['tga'] = [0x0, 0x0, 0xa]
-        magic_hex['bmp'] = [0x42, 0x4d]
-
-
+        magic_hex = {
+            'jpg': [0xFF, 0xD8, 0xFF, 0xE0],
+            'png': [0x89, 0x50, 0x4E, 0x47],
+            'tga': [0x0, 0x0, 0xA],
+            'bmp': [0x42, 0x4D],
+        }
         formats = ["jpg", "png", "tga", "bmp"]
         # uppercase too... JPG
-        formats = formats + [x.upper() for x in formats]
+        formats += [x.upper() for x in formats]
 
         for fmt in formats:
             try:
-                temp_filename = "%s.%s" % ("tmpimg", fmt)
+                temp_filename = f"tmpimg.{fmt}"
                 pygame.image.save(s, temp_filename)
                 # test the magic numbers at the start of the file to ensure they are saved 
                 #   as the correct file type.
@@ -176,7 +167,6 @@ class ImageModuleTest( unittest.TestCase ):
             finally:
                 #clean up the temp file, comment out to leave tmp file after run.
                 os.remove(temp_filename)
-                pass
 
                 
     def test_save_colorkey(self):
@@ -206,8 +196,8 @@ class ImageModuleTest( unittest.TestCase ):
         
     def assertPremultipliedAreEqual(self, string1, string2, source_string):
         self.assertEqual(len(string1), len(string2))
-        block_size = 20
         if string1 != string2:
+            block_size = 20
             for block_start in xrange_(0, len(string1), block_size):
                 block_end = min(block_start + block_size, len(string1))
                 block1 = string1[block_start:block_end]

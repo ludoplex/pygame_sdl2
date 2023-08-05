@@ -58,15 +58,13 @@ opt_parser.add_option('-t', '--test',  action = 'store_true')
 if __name__ == '__main__':
     options, args = opt_parser.parse_args()
     sys.argv = sys.argv[:1] + args
-    
+
     if options.skip_svn:     skip_svn()
     if options.force_build:  force_build()
-    
+
     if options.test:
         run_tests()
-    else:
-        # Swap out some slow components for quick debugging
-        if options.config: config.main()
-        else:              update.main()
+    elif options.config: config.main()
+    else:              update.main()
     
 ################################################################################

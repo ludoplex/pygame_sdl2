@@ -34,8 +34,7 @@ else:
              UInt8 as uint8, UInt16 as uint16, UInt32 as uint32, zeros, \
              Float64 as float64, alltrue
     else:
-        print ("Unknown array type %s; tests skipped" %
-               pygame.surfarray.get_arraytype())
+        print(f"Unknown array type {pygame.surfarray.get_arraytype()}; tests skipped")
         arraytype = ""
 
 class SurfarrayModuleTest (unittest.TestCase):
@@ -455,10 +454,10 @@ class SurfarrayModuleTest (unittest.TestCase):
         if not arraytype:
             self.fail("no array package installed")
 
-        self.failUnless((pygame.surfarray.get_arraytype() in
-                         ['numpy', 'numeric']),
-                        ("unknown array type %s" %
-                         pygame.surfarray.get_arraytype()))
+        self.failUnless(
+            pygame.surfarray.get_arraytype() in ['numpy', 'numeric'],
+            f"unknown array type {pygame.surfarray.get_arraytype()}",
+        )
 
     def test_get_arraytypes(self):
         if not arraytype:
@@ -480,8 +479,7 @@ class SurfarrayModuleTest (unittest.TestCase):
             self.failUnless('numeric' in arraytypes)
 
         for atype in arraytypes:
-            self.failUnless(atype in ['numpy', 'numeric'],
-                            "unknown array type %s" % atype)
+            self.failUnless(atype in ['numpy', 'numeric'], f"unknown array type {atype}")
 
     def test_make_surface(self):
         if not arraytype:
@@ -522,7 +520,7 @@ class SurfarrayModuleTest (unittest.TestCase):
     def test_map_array(self):
         if not arraytype:
             self.fail("no array package installed")
-        if not arraytype == 'numpy':
+        if arraytype != 'numpy':
             # This test would probably fail for Numeric
             # (incompatible get_rgb and array element types
             #  and zero alpha for SRCALPHA surfaces).
@@ -682,7 +680,7 @@ class SurfarrayModuleTest (unittest.TestCase):
         self._test_pixels_rgb('blue', 2)
 
     def _test_pixels_rgb(self, operation, mask_posn):
-        method_name = "pixels_" + operation
+        method_name = f"pixels_{operation}"
         if not arraytype:
             self.fail("no array package installed")
         # unavailable for 'numeric'
@@ -779,7 +777,7 @@ class SurfarrayModuleTest (unittest.TestCase):
 
 
 if __name__ == '__main__':
-    if not arraytype:
-        print ("No array package is installed. Cannot run unit tests.")
-    else:
+    if arraytype:
         unittest.main()
+    else:
+        print ("No array package is installed. Cannot run unit tests.")

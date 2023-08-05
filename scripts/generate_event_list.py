@@ -31,9 +31,8 @@ def main():
 
     # Parse the SDL_<name> event names.
     for l in lines:
-        m = re.match(r'\s*(SDL_\w+)', l)
-        if m:
-            sdl_events.append(m.group(1))
+        if m := re.match(r'\s*(SDL_\w+)', l):
+            sdl_events.append(m[1])
 
     # A pygame event name corresponding to each of the events in SDL_EVENTS.
     events = [ ]
@@ -53,12 +52,12 @@ cdef extern from "SDL.h":
 """)
 
         for sdl_name in sdl_events:
-            f.write("        {}\n".format(sdl_name))
+            f.write(f"        {sdl_name}\n")
 
     # Write a list of events to be included by .locals.pyx
     with util.open_include("event_list.pxi") as f:
         for sdl_name, name in zip(sdl_events, events):
-            f.write("{} = {}\n".format(name, sdl_name))
+            f.write(f"{name} = {sdl_name}\n")
 
 
     # Write a dict of event names to be included by .event.pyx

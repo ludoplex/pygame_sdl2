@@ -38,28 +38,24 @@ from test_utils import trunk_relative_path
 
 # Anything not wanted to be stubbed, such as aliases, or redundancies
 
-IGNORES = set([
-
-    pygame.rect.Rect.h,           pygame.rect.Rect.w,
-    pygame.rect.Rect.x,           pygame.rect.Rect.y,
-
-    pygame.color.Color.a,         pygame.color.Color.b,
-    pygame.color.Color.g,         pygame.color.Color.r,
-    
-    # Ignore by class: all methods and getter setters cut from root
-    
-    # pygame.sprite.AbstractGroup,
-
+IGNORES = {
+    pygame.rect.Rect.h,
+    pygame.rect.Rect.w,
+    pygame.rect.Rect.x,
+    pygame.rect.Rect.y,
+    pygame.color.Color.a,
+    pygame.color.Color.b,
+    pygame.color.Color.g,
+    pygame.color.Color.r,
     pygame.sprite.LayeredUpdates,
     pygame.sprite.LayeredDirty,
     pygame.sprite.OrderedUpdates,
     pygame.sprite.GroupSingle,
     pygame.sprite.RenderUpdates,
     pygame.sprite.Group,
-    
     pygame.image.tostring,
     pygame.base.error.args,
-])
+}
 
 # pygame.sprite.Sprite.__module__ = 'pygame.sprite' 
 # pygame.sprite.Rect.__module__   = 'pygame'
@@ -162,7 +158,7 @@ opt_parser.set_usage(usage_text)
 docs = {}
 
 def module_in_package(module, pkg):
-    return ("%s." % pkg.__name__) in module.__name__
+    return f"{pkg.__name__}." in module.__name__
 
 def get_package_modules(pkg):
     modules = (getattr(pkg, x) for x in dir(pkg) if is_public(x))
@@ -178,7 +174,7 @@ def py_comment(input_str):
         else:
             lines += [line]
 
-    return '\n'.join([('# ' + l) for l in lines]).rstrip('\n# ')
+    return '\n'.join([f'# {l}' for l in lines]).rstrip('\n# ')
 
 def is_public(obj_name):
     try: obj_name += ''
@@ -190,9 +186,16 @@ def get_callables(obj, if_of = None, check_where_defined=False):
     callables = (x for x in publics if callable(x) or isgetsetdescriptor(x))
 
     if check_where_defined:
-        callables = (c for c in callables if ( 'pygame' in c.__module__ or
-                    ('__builtin__' == c.__module__ and isclass(c)) )
-                    and REAL_HOMES.get(c, 0) in (obj, 0))
+        callables = (
+            c
+            for c in callables
+            if (
+                'pygame' in c.__module__
+                or c.__module__ == '__builtin__'
+                and isclass(c)
+            )
+            and REAL_HOMES.get(c, 0) in (obj, 0)
+        )
 
     if if_of:
         callables = (x for x in callables if if_of(x)) # isclass, ismethod etc
@@ -213,13 +216,13 @@ def callable_name(*args):
 ################################################################################
 
 def test_stub(f, module, parent_class = None):
-    test_name = 'todo_test_%s' % f.__name__
+    test_name = f'todo_test_{f.__name__}'
     unit_name = callable_name(module, parent_class, f)
 
     stub = STUB_TEMPLATE.render (
 
         test_name = test_name,
-        
+
         # docs is a global, possibly empty dict, depending on options.docs
         comments = py_comment ( "%s\n\n%s" %
             (
@@ -237,9 +240,7 @@ def make_stubs(seq, module, class_=None):
 def module_stubs(module):
     stubs = {}
     all_callables = get_callables(module, check_where_defined = True) - IGNORES
-    classes = set (
-        c for c in all_callables if isclass(c) or c in MUST_INSTANTIATE
-    )
+    classes = {c for c in all_callables if isclass(c) or c in MUST_INSTANTIATE}
 
     for class_ in classes:
         base_type = class_
@@ -247,19 +248,17 @@ def module_stubs(module):
         if class_ in MUST_INSTANTIATE:
             class_ = get_instance(class_)
 
-        stubs.update (
-            make_stubs(get_callables(class_) - IGNORES, module, base_type)
-        )
+        stubs |= make_stubs(get_callables(class_) - IGNORES, module, base_type)
 
     stubs.update(make_stubs(all_callables - classes, module))
 
     return stubs
 
 def package_stubs(package):
-    stubs = dict()
+    stubs = {}
 
     for module in get_package_modules(package):
-        stubs.update(module_stubs(module))
+        stubs |= module_stubs(module)
 
     return stubs
 
@@ -283,7 +282,7 @@ def already_tested_in_module(module):
     already = []
 
     mod_name =  module.__name__
-    test_name = "%s_test" % mod_name[7:]
+    test_name = f"{mod_name[7:]}_test"
 
     try: test_file = __import__(test_name)
     except ImportError:                              #TODO:  create a test file?
@@ -291,7 +290,7 @@ def already_tested_in_module(module):
 
     classes = get_callables(test_file, isclass)
     test_cases = (t for t in classes if TestCase in t.__bases__)
-    
+
     for class_ in test_cases:
         class_tested = get_class_from_test_case(class_) or ''
 
@@ -312,14 +311,13 @@ def already_tested_in_package(package):
 ################################################################################
 
 def get_stubs(root):
-    module_root = module_re.search(root)
-    if module_root:
+    if module_root := module_re.search(root):
         try:
             module = getattr(pygame, module_root.group(1))
         except AttributeError:
-            __import__( 'pygame.' + module_root.group(1) )
+            __import__(f'pygame.{module_root.group(1)}')
             module = getattr(pygame, module_root.group(1))
-            
+
 
         stubs = module_stubs(module)
         tested = already_tested_in_module(module)

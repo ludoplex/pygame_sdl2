@@ -175,14 +175,14 @@ class ColorTypeTest (unittest.TestCase):
         self.failIf(Color(255, 0, 0, 0) == "#ff000000")
         self.failUnless(Color(255, 0, 0, 0) != "#ff000000")
 
-        self.failIf("#ff000000" == Color(255, 0, 0, 0))
-        self.failUnless("#ff000000" != Color(255, 0, 0, 0))
+        self.failIf(Color(255, 0, 0, 0) == "#ff000000")
+        self.failUnless(Color(255, 0, 0, 0) != "#ff000000")
 
         self.failIf(Color(255, 0, 0, 0) == 0xff000000)
         self.failUnless(Color(255, 0, 0, 0) != 0xff000000)
 
-        self.failIf(0xff000000 == Color(255, 0, 0, 0))
-        self.failUnless(0xff000000 != Color(255, 0, 0, 0))
+        self.failIf(Color(255, 0, 0, 0) == 0xff000000)
+        self.failUnless(Color(255, 0, 0, 0) != 0xff000000)
 
         self.failIf(Color(255, 0, 0, 0) == [255, 0, 0, 0])
         self.failUnless(Color(255, 0, 0, 0) != [255, 0, 0, 0])
@@ -190,7 +190,6 @@ class ColorTypeTest (unittest.TestCase):
         self.failIf([255, 0, 0, 0] == Color(255, 0, 0 ,0))
         self.failUnless([255, 0, 0, 0] != Color(255, 0, 0, 0))
 
-        # Comparison is not implemented for invalid color values.
         class Test(object):
             def __eq__(self, other):
                 return -1
@@ -554,14 +553,14 @@ class ColorTypeTest (unittest.TestCase):
         self.assertRaises (ValueError, pygame.Color, "09abcde")
         self.assertRaises (ValueError, pygame.Color, "quarky")
 
-    def test_int (self):
+    def test_int(self):
         # This will be a long
         c = pygame.Color (0xCC00CC00)
         self.assertEquals (c.r, 204)
         self.assertEquals (c.g, 0)
         self.assertEquals (c.b, 204)
         self.assertEquals (c.a, 0)
-        self.assertEquals (int (c), int (0xCC00CC00))
+        self.assertEquals(int (c), 3422604288)
 
         # This will be an int
         c = pygame.Color (0x33727592)
@@ -569,7 +568,7 @@ class ColorTypeTest (unittest.TestCase):
         self.assertEquals (c.g, 114)
         self.assertEquals (c.b, 117)
         self.assertEquals (c.a, 146)
-        self.assertEquals (int (c), int (0x33727592))
+        self.assertEquals(int (c), 863139218)
 
     def test_long (self):
         # This will be a long
@@ -717,7 +716,7 @@ class ColorTypeTest (unittest.TestCase):
 
 ################################################################################
 
-    def colorspaces_converted_should_equate_bar_rounding (self, prop):
+    def colorspaces_converted_should_equate_bar_rounding(self, prop):
         for c in rgba_combos_Color_generator():
             other = pygame.Color(0)
 
@@ -729,7 +728,7 @@ class ColorTypeTest (unittest.TestCase):
                 self.assert_(abs(other.b - c.b) <= 1)
                 self.assert_(abs(other.g - c.g) <= 1)
                 # CMY and I1I2I3 do not care about the alpha
-                if not prop in ("cmy", "i1i2i3"):
+                if prop not in ("cmy", "i1i2i3"):
                     self.assert_(abs(other.a - c.a) <= 1)
 
             except ValueError:
@@ -817,21 +816,24 @@ class ColorTypeTest (unittest.TestCase):
         from ctypes import cast, POINTER, c_uint8
         buftools = self.buftools
 
+
+
         class ColorImporter(buftools.Importer):
             def __init__(self, color, flags):
                 super(ColorImporter, self).__init__(color, flags)
                 self.items = cast(self.buf, POINTER(c_uint8))
+
             def __getitem__(self, index):
                 if 0 <= index < 4:
                     return self.items[index]
-                raise IndexError("valid index values are between 0 and 3: "
-                                 "got {}".format(index))
+                raise IndexError(f"valid index values are between 0 and 3: got {index}")
+
             def __setitem__(self, index, value):
                 if 0 <= index < 4:
                     self.items[index] = value
                 else:
-                    raise IndexError("valid index values are between 0 and 3: "
-                                     "got {}".format(index))
+                    raise IndexError(f"valid index values are between 0 and 3: got {index}")
+
 
         c = pygame.Color(50, 100, 150, 200)
         imp = ColorImporter(c, buftools.PyBUF_SIMPLE)

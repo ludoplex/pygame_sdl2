@@ -77,7 +77,7 @@ class FontModuleTest( unittest.TestCase ):
 
     def test_get_fonts(self):
         fnts = pygame_font.get_fonts()
-        
+
         if not fnts:
             raise Exception(repr(fnts))
 
@@ -85,11 +85,7 @@ class FontModuleTest( unittest.TestCase ):
 
         # strange python 2.x bug... if you assign to unicode, 
         #   all sorts of weirdness happens.
-        if sys.version_info <= (3, 0, 0):
-            unicod = unicode
-        else:
-            unicod = str
-
+        unicod = unicode if sys.version_info <= (3, 0, 0) else str
         for name in fnts:
             # note, on ubuntu 2.6 they are all unicode strings.
 
@@ -273,24 +269,8 @@ class FontTypeTest( unittest.TestCase ):
             u = as_unicode(r"\U00013000")
             bm = f.metrics(u)
             self.assert_(len(bm) == 1 and bm[0] is None)
-    
-        return # unfinished
-        # The documentation is useless here. How large a list?
-        # How do list positions relate to character codes?
-        # What about unicode characters?
 
-        # __doc__ (as of 2008-08-02) for pygame_font.Font.metrics:
-
-          # Font.metrics(text): return list
-          # Gets the metrics for each character in the pased string.
-          # 
-          # The list contains tuples for each character, which contain the
-          # minimum X offset, the maximum X offset, the minimum Y offset, the
-          # maximum Y offset and the advance offset (bearing plus width) of the
-          # character. [(minx, maxx, miny, maxy, advance), (minx, maxx, miny,
-          # maxy, advance), ...]
-
-        self.fail() 
+        return # unfinished 
 
     def test_render(self):
         """ 
@@ -528,7 +508,7 @@ class VisualTests( unittest.TestCase ):
                 modes.append("underlined")
             if antialiase:
                 modes.append("antialiased")
-            text = "%s (y/n):" % ('-'.join(modes),)
+            text = f"{'-'.join(modes)} (y/n):"
         f.set_bold(bold)
         f.set_italic(italic)
         f.set_underline(underline)

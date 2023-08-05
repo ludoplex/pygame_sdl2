@@ -343,13 +343,17 @@ class SpriteCollideTest( unittest.TestCase ):
 
         crashed = pygame.sprite.groupcollide(self.ag, self.ag2, False, False,
                                              collided_callback_true)
-        self.assert_(crashed == {self.s1: [self.s2, self.s3]} or
-                     crashed == {self.s1: [self.s3, self.s2]})
+        self.assert_(
+            crashed
+            in [{self.s1: [self.s2, self.s3]}, {self.s1: [self.s3, self.s2]}]
+        )
 
         crashed = pygame.sprite.groupcollide(self.ag, self.ag2, False, False,
                                              collided_callback_true)
-        self.assert_(crashed == {self.s1: [self.s2, self.s3]} or
-                     crashed == {self.s1: [self.s3, self.s2]})
+        self.assert_(
+            crashed
+            in [{self.s1: [self.s2, self.s3]}, {self.s1: [self.s3, self.s2]}]
+        )
 
         # test killb
         crashed = pygame.sprite.groupcollide(self.ag, self.ag2, False, True,
@@ -358,8 +362,10 @@ class SpriteCollideTest( unittest.TestCase ):
 
         crashed = pygame.sprite.groupcollide(self.ag, self.ag2, False, True,
                                              collided_callback_true)
-        self.assert_(crashed == {self.s1: [self.s2, self.s3]} or
-                     crashed == {self.s1: [self.s3, self.s2]})
+        self.assert_(
+            crashed
+            in [{self.s1: [self.s2, self.s3]}, {self.s1: [self.s3, self.s2]}]
+        )
 
         crashed = pygame.sprite.groupcollide(self.ag, self.ag2, False, True,
                                              collided_callback_true)
@@ -546,8 +552,7 @@ class AbstractGroupTypeTest( unittest.TestCase ):
     def test_sprites(self):
 
         sprite_list = self.ag.sprites()
-        self.assert_(sprite_list == [self.s1, self.s2] or
-                     sprite_list == [self.s2, self.s1])
+        self.assert_(sprite_list in [[self.s1, self.s2], [self.s2, self.s1]])
 
     def test_update(self):
 
@@ -652,9 +657,7 @@ class LayeredGroupBase:
         # test_add_spritelist
 
         self.assert_(len(self.LG._spritelist)==0)
-        sprites = []
-        for i in range(10):
-            sprites.append(self.sprite())
+        sprites = [self.sprite() for _ in range(10)]
         self.LG.add(sprites)
         self.assert_(len(self.LG._spritelist)==10)
         for i in range(10):
@@ -677,9 +680,7 @@ class LayeredGroupBase:
         # test_add_spritelist_passing_layer
 
         self.assert_(len(self.LG._spritelist)==0)
-        sprites = []
-        for i in range(10):
-            sprites.append(self.sprite())
+        sprites = [self.sprite() for _ in range(10)]
         self.LG.add(sprites, layer=33)
         self.assert_(len(self.LG._spritelist)==10)
         for i in range(10):
@@ -702,9 +703,7 @@ class LayeredGroupBase:
         # test_add_spritelist_init
 
         self.assert_(len(self.LG._spritelist)==0)
-        sprites = []
-        for i in range(10):
-            sprites.append(self.sprite())
+        sprites = [self.sprite() for _ in range(10)]
         lrg2 = sprite.LayeredUpdates(sprites)
         self.assert_(len(lrg2._spritelist)==10)
         for i in range(10):
@@ -715,7 +714,7 @@ class LayeredGroupBase:
 
         self.assert_(len(self.LG._spritelist)==0)
         sprites = []
-        for i in range(10):
+        for _ in range(10):
             sprites.append(self.sprite())
             sprites[-1].rect = 0
         self.LG.add(sprites)
@@ -743,7 +742,7 @@ class LayeredGroupBase:
         self.assert_(len(self.LG._spritelist)==0)
         sprites = []
         for i in range(10):
-            for j in range(5):
+            for _ in range(5):
                 sprites.append(self.sprite())
                 sprites[-1]._layer = i
         self.LG.add(sprites)
@@ -932,9 +931,7 @@ class LayeredDirtyTypeTest__DirtySprite(LayeredGroupBase, unittest.TestCase):
 class SpriteBase:
     def setUp(self):
         self.groups = []
-        for Group in self.Groups:
-            self.groups.append(Group())
-
+        self.groups.extend(Group() for Group in self.Groups)
         self.sprite = self.Sprite()
 
     def test_add_internal(self):

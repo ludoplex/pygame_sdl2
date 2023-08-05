@@ -3,11 +3,12 @@
 Wrapper script to use pygame_sdl2 to run tests from the pygame test suite.
 """
 
+
 import pygame_sdl2, sys
 pygame_sdl2.import_as_pygame()
 
 if len(sys.argv) < 2:
-    print("usage: {} <path-to-script>".format(sys.argv[0]))
+    print(f"usage: {sys.argv[0]} <path-to-script>")
     sys.exit(1)
 
 import sys

@@ -22,31 +22,30 @@ class DisplayModuleTest( unittest.TestCase ):
             "|Tags:display|"
         """
 
-        if 1:
-            pygame.init()
-            screen = pygame.display.set_mode((100,100))
-            screen.fill((55,55,55))
+        pygame.init()
+        screen = pygame.display.set_mode((100,100))
+        screen.fill((55,55,55))
 
-            r1 = pygame.Rect(0,0,100,100)
-            pygame.display.update(r1)
+        r1 = pygame.Rect(0,0,100,100)
+        pygame.display.update(r1)
 
-            r2 = pygame.Rect(-10,0,100,100)
-            pygame.display.update(r2)
+        r2 = pygame.Rect(-10,0,100,100)
+        pygame.display.update(r2)
 
-            r3 = pygame.Rect(-10,0,-100,-100)
-            pygame.display.update(r3)
+        r3 = pygame.Rect(-10,0,-100,-100)
+        pygame.display.update(r3)
 
-            # NOTE: if I don't call pygame.quit there is a segfault.  hrmm.
-            pygame.quit()
-            #  I think it's because unittest runs stuff in threads
-            # here's a stack trace...
-            
-            # NOTE to author of above:
-            #   unittest doesn't run tests in threads    
-            #   segfault was probably caused by another tests need 
-            #   for a "clean slate"
-            
-            """
+        # NOTE: if I don't call pygame.quit there is a segfault.  hrmm.
+        pygame.quit()
+        #  I think it's because unittest runs stuff in threads
+        # here's a stack trace...
+
+        # NOTE to author of above:
+        #   unittest doesn't run tests in threads    
+        #   segfault was probably caused by another tests need 
+        #   for a "clean slate"
+
+        """
     #0  0x08103b7c in PyFrame_New ()
     #1  0x080bd666 in PyEval_EvalCodeEx ()
     #2  0x08105202 in PyFunction_SetClosure ()
@@ -95,26 +94,6 @@ class DisplayModuleTest( unittest.TestCase ):
           #     They are -1 on error, or if an old SDL is being used.
 
         self.fail()
-        
-        if 0:
-        
-            pygame.init()
-            inf = pygame.display.Info()
-            print ("before a display mode has been set")
-            print (inf)
-        
-            self.assertNotEqual(inf.current_h, -1)
-            self.assertNotEqual(inf.current_w, -1)
-            #probably have an older SDL than 1.2.10 if -1.
-        
-            screen = pygame.display.set_mode((100,100))
-            inf = pygame.display.Info()
-        
-            print (inf)
-        
-            self.assertNotEqual(inf.current_h, -1)
-            self.assertEqual(inf.current_h, 100)
-            self.assertEqual(inf.current_w, 100)
         
             #pygame.quit()
 

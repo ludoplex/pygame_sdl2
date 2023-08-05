@@ -4,7 +4,7 @@ if __name__ == '__main__':
     import sys
     sys.exit("This module is for import only")
 
-test_pkg_name = '.'.join(__name__.split('.')[0:-2])
+test_pkg_name = '.'.join(__name__.split('.')[:-2])
 is_pygame_pkg = test_pkg_name == 'pygame.tests'
 if is_pygame_pkg:
     from pygame.tests import test_utils
@@ -104,7 +104,7 @@ def run(*args, **kwds):
     if was_run:
         raise RuntimeError("run() was already called this session")
     was_run = True
-                           
+
     options = kwds.copy()
     option_nosubprocess = options.get('nosubprocess', False)
     option_dump = options.pop('dump', False)
@@ -141,7 +141,7 @@ def run(*args, **kwds):
     TEST_MODULE_RE = re.compile('^(.+_test)\.py$')
 
     test_mods_pkg_name = test_pkg_name
-    
+
     if option_fake is not None:
         test_mods_pkg_name = '.'.join([test_mods_pkg_name,
                                        'run_tests__tests',
@@ -176,7 +176,7 @@ def run(*args, **kwds):
     tmp = test_modules
     test_modules = []
     for name in tmp:
-        tag_module_name = "%s_tags" % (name[0:-5],)
+        tag_module_name = f"{name[:-5]}_tags"
         try:
             tag_module = import_submodule(tag_module_name)
         except ImportError:
@@ -185,12 +185,12 @@ def run(*args, **kwds):
             try:
                 tags = tag_module.__tags__
             except AttributeError:
-                print ("%s has no tags: ignoring" % (tag_module_name,))
+                print(f"{tag_module_name} has no tags: ignoring")
                 test_module.append(name)
             else:
                 for tag in tags:
                     if tag in option_exclude:
-                        print ("skipping %s (tag '%s')" % (name, tag))
+                        print(f"skipping {name} (tag '{tag}')")
                         break
                 else:
                     test_modules.append(name)
@@ -240,14 +240,14 @@ def run(*args, **kwds):
         for option in ['timings', 'seed']:
             value = options.pop(option, None)
             if value is not None:
-                pass_on_args.append('--%s' % option)
+                pass_on_args.append(f'--{option}')
                 pass_on_args.append(str(value))
         for option, value in options.items():
             if value:
-                pass_on_args.append('--%s' % option)
+                pass_on_args.append(f'--{option}')
 
         def sub_test(module):
-            print ('loading %s' % module)
+            print(f'loading {module}')
 
             cmd = [option_python, test_runner_py, module ] + pass_on_args
 
@@ -269,7 +269,7 @@ def run(*args, **kwds):
 
         for module, cmd, (return_code, raw_return) in tmap(sub_test,
                                                            test_modules):
-            test_file = '%s.py' % os.path.join(test_subdir, module)
+            test_file = f'{os.path.join(test_subdir, module)}.py'
             cmd, test_env, working_dir = cmd
 
             test_results = get_test_results(raw_return)

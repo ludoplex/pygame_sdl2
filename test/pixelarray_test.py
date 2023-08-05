@@ -272,16 +272,16 @@ class PixelArrayTypeTest (unittest.TestCase, TestMixin):
             self.assertEqual (ar[1][0], sf.map_rgb ((0, 255, 255)))
             self.assertEqual (ar[1][1], sf.map_rgb ((0, 255, 255)))
 
-    def test_get_slice (self):
+    def test_get_slice(self):
         for bpp in (8, 16, 24, 32):
             sf = pygame.Surface ((10, 20), 0, bpp)
             sf.fill ((0, 0, 0))
             ar = pygame.PixelArray (sf)
 
-            self.assertEqual (len (ar[0:2]), 2)
+            self.assertEqual(len(ar[:2]), 2)
             self.assertEqual (len (ar[3:7][3]), 20)
 
-            self.assertEqual (ar[0:0], None)
+            self.assertEqual(ar[:0], None)
             self.assertEqual (ar[5:5], None)
             self.assertEqual (ar[9:9], None)
 
@@ -324,7 +324,7 @@ class PixelArrayTypeTest (unittest.TestCase, TestMixin):
             ar = pygame.PixelArray (sf)
             self.assert_ (ar.surface is sf)
 
-    def test_set_slice (self):
+    def test_set_slice(self):
         for bpp in (8, 16, 24, 32):
             sf = pygame.Surface ((6, 8), 0, bpp)
             sf.fill ((0, 0, 0))
@@ -332,7 +332,7 @@ class PixelArrayTypeTest (unittest.TestCase, TestMixin):
 
             # Test single value assignment
             val = sf.map_rgb ((128, 128, 128))
-            ar[0:2] = val
+            ar[:2] = val
             self.assertEqual (ar[0][0], val)
             self.assertEqual (ar[0][1], val)
             self.assertEqual (ar[1][0], val)
@@ -358,7 +358,7 @@ class PixelArrayTypeTest (unittest.TestCase, TestMixin):
             # And the horizontal assignment.
             val = sf.map_rgb ((255, 0, 0))
             val2 = sf.map_rgb ((128, 0, 255))
-            ar[0:2] = [val, val2]
+            ar[:2] = [val, val2]
             self.assertEqual (ar[0][0], val)
             self.assertEqual (ar[1][0], val2)
             self.assertEqual (ar[0][1], val)

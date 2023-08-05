@@ -15,7 +15,7 @@ def main():
         print(target, "is not a symlink. Perhaps this script has already been run.")
         sys.exit(1)
 
-    tmp = target + ".tmp"
+    tmp = f"{target}.tmp"
 
     if os.path.exists(tmp):
         shutil.rmtree(tmp)

@@ -126,16 +126,15 @@ class TransformModuleTest( unittest.TestCase ):
         # the wrong size surface is past in.  Should raise an error.
         self.assertRaises(ValueError, pygame.transform.scale, s, (33,64), s3)
 
-        if 1:
-            s = pygame.Surface((32,32))
-            s2 = pygame.transform.smoothscale(s, (64,64))
-            s3 = s2.copy()
+        s = pygame.Surface((32,32))
+        s2 = pygame.transform.smoothscale(s, (64,64))
+        s3 = s2.copy()
 
-            s3 = pygame.transform.smoothscale(s, (64,64), s3)
-            pygame.transform.smoothscale(s, (64,64), s2)
+        s3 = pygame.transform.smoothscale(s, (64,64), s3)
+        pygame.transform.smoothscale(s, (64,64), s2)
 
-            # the wrong size surface is past in.  Should raise an error.
-            self.assertRaises(ValueError, pygame.transform.smoothscale, s, (33,64), s3)
+        # the wrong size surface is past in.  Should raise an error.
+        self.assertRaises(ValueError, pygame.transform.smoothscale, s, (33,64), s3)
 
 
     def test_threshold__honors_third_surface(self):
@@ -393,76 +392,68 @@ class TransformModuleTest( unittest.TestCase ):
 
 
 
-        if 1:
+        # only one pixel should not be changed.
+        s1.fill((40,40,40))
+        s2.fill((255,255,255))
+        s1.set_at( (0,0), (170, 170, 170) )
+        # set the similar pixels in destination surface to the color
+        #     in the first surface.
+        num_threshold_pixels = threshold(s2, s1, (30,30,30), (11,11,11),
+                                         (0,0,0), 2)
 
-            # only one pixel should not be changed.
-            s1.fill((40,40,40))
-            s2.fill((255,255,255))
-            s1.set_at( (0,0), (170, 170, 170) )
-            # set the similar pixels in destination surface to the color
-            #     in the first surface.
-            num_threshold_pixels = threshold(s2, s1, (30,30,30), (11,11,11),
-                                             (0,0,0), 2)
-
-            #num_threshold_pixels = threshold(s2, s1, (30,30,30))
-            self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
-            self.assertEqual(s2.get_at((0,0)), (0,0,0, 255))
-            self.assertEqual(s2.get_at((0,1)), (40, 40, 40, 255))
-            self.assertEqual(s2.get_at((17,1)), (40, 40, 40, 255))
+        #num_threshold_pixels = threshold(s2, s1, (30,30,30))
+        self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
+        self.assertEqual(s2.get_at((0,0)), (0,0,0, 255))
+        self.assertEqual(s2.get_at((0,1)), (40, 40, 40, 255))
+        self.assertEqual(s2.get_at((17,1)), (40, 40, 40, 255))
 
 
-        # abs(40 - 255) < 100
-        #(abs(c1[0] - r) < tr)
+        s1.fill((160,160,160))
+        s2.fill((255,255,255))
+        num_threshold_pixels = threshold(s2, s1, (255,255,255), (100,100,100), (0,0,0), True)
 
-        if 1:
-            s1.fill((160,160,160))
-            s2.fill((255,255,255))
-            num_threshold_pixels = threshold(s2, s1, (255,255,255), (100,100,100), (0,0,0), True)
-
-            self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()))
+        self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()))
 
 
 
 
-        if 1:
-            # only one pixel should not be changed.
-            s1.fill((40,40,40))
-            s2.fill((255,255,255))
-            s1.set_at( (0,0), (170, 170, 170) )
-            num_threshold_pixels = threshold(s3, s1, (30,30,30), (11,11,11), (0,0,0), False)
-            #num_threshold_pixels = threshold(s2, s1, (30,30,30))
-            self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
+        # only one pixel should not be changed.
+        s1.fill((40,40,40))
+        s2.fill((255,255,255))
+        s1.set_at( (0,0), (170, 170, 170) )
+        num_threshold_pixels = threshold(s3, s1, (30,30,30), (11,11,11), (0,0,0), False)
+        #num_threshold_pixels = threshold(s2, s1, (30,30,30))
+        self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
 
 
-        if 1:
-            # test end markers.  0, and 255
+        # test end markers.  0, and 255
 
-            # the pixels are different by 1.
-            s1.fill((254,254,254))
-            s2.fill((255,255,255))
-            s3.fill((255,255,255))
-            s1.set_at( (0,0), (170, 170, 170) )
-            num_threshold_pixels = threshold(s3, s1, (254,254,254), (1,1,1),
-                                             (44,44,44,255), False)
-            self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
-
-
-            # compare the two surfaces.  Should be all but one matching.
-            num_threshold_pixels = threshold(s3, s1, 0, (1,1,1),
-                                             (44,44,44,255), False, s2)
-            self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
+        # the pixels are different by 1.
+        s1.fill((254,254,254))
+        s2.fill((255,255,255))
+        s3.fill((255,255,255))
+        s1.set_at( (0,0), (170, 170, 170) )
+        num_threshold_pixels = threshold(s3, s1, (254,254,254), (1,1,1),
+                                         (44,44,44,255), False)
+        self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
 
 
-            # within (0,0,0) threshold?  Should match no pixels.
-            num_threshold_pixels = threshold(s3, s1, (253,253,253), (0,0,0),
-                                             (44,44,44,255), False)
-            self.assertEqual(num_threshold_pixels, 0)
+        # compare the two surfaces.  Should be all but one matching.
+        num_threshold_pixels = threshold(s3, s1, 0, (1,1,1),
+                                         (44,44,44,255), False, s2)
+        self.assertEqual(num_threshold_pixels, (s1.get_height() * s1.get_width()) -1)
 
 
-            # other surface within (0,0,0) threshold?  Should match no pixels.
-            num_threshold_pixels = threshold(s3, s1, 0, (0,0,0),
-                                             (44,44,44,255), False, s2)
-            self.assertEqual(num_threshold_pixels, 0)
+        # within (0,0,0) threshold?  Should match no pixels.
+        num_threshold_pixels = threshold(s3, s1, (253,253,253), (0,0,0),
+                                         (44,44,44,255), False)
+        self.assertEqual(num_threshold_pixels, 0)
+
+
+        # other surface within (0,0,0) threshold?  Should match no pixels.
+        num_threshold_pixels = threshold(s3, s1, 0, (0,0,0),
+                                         (44,44,44,255), False, s2)
+        self.assertEqual(num_threshold_pixels, 0)
 
 
 
@@ -527,7 +518,9 @@ class TransformModuleTest( unittest.TestCase ):
         self.assertRaises(TypeError, pygame.transform.average_surfaces, [1, s1])
         self.assertRaises(TypeError, pygame.transform.average_surfaces, [s1, s2, 1])
 
-        self.assertRaises(TypeError, pygame.transform.average_surfaces, (s for s in [s1, s2,s3] ))
+        self.assertRaises(
+            TypeError, pygame.transform.average_surfaces, iter([s1, s2, s3])
+        )
 
 
 
@@ -547,13 +540,6 @@ class TransformModuleTest( unittest.TestCase ):
         self.assertEqual( sr.get_masks(), s1.get_masks() )
         self.assertEqual( sr.get_flags(), s1.get_flags() )
         self.assertEqual( sr.get_losses(), s1.get_losses() )
-
-        if 0:
-            print ( sr, s1 )
-            print ( sr.get_masks(), s1.get_masks() )
-            print ( sr.get_flags(), s1.get_flags() )
-            print ( sr.get_losses(), s1.get_losses() )
-            print ( sr.get_shifts(), s1.get_shifts() )
 
         self.assertEqual(sr.get_at((0,0)), (10,53,50,255))
 

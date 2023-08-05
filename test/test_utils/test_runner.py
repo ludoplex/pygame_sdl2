@@ -61,8 +61,7 @@ EXCLUDE_RE = re.compile("(%s,?\s*)+$" % (TAG_PAT,))
 
 def exclude_callback(option, opt, value, parser):
     if EXCLUDE_RE.match(value) is None:
-        raise opt_parser.OptionValueError("%s argument has invalid value" %
-                                          (opt,))
+        raise opt_parser.OptionValueError(f"{opt} argument has invalid value")
     parser.values.exclude = TAG_RE.findall(value)
 
 opt_parser = optparse.OptionParser()
@@ -163,7 +162,7 @@ def combine_results(all_results, t):
 
         if 'E' in dots or 'F' in dots:
             failures.append( output[len(dots)+1:].split(RAN_TESTS_DIV)[0] )
-    
+
     total_fails, total_errors = map(all_dots.count, 'FE')
     total_tests = len(all_dots)
 
@@ -172,11 +171,18 @@ def combine_results(all_results, t):
     combined += ["%s %s tests in %.3fs\n" % (RAN_TESTS_DIV, total_tests, t)]
 
     if not failures: combined += ['OK\n']
-    else: combined += [
-        'FAILED (%s)\n' % ', '.join (
-            (total_fails  and ["failures=%s" % total_fails] or []) +
-            (total_errors and ["errors=%s"  % total_errors] or [])
-        )]
+    else:else
+        combined += [
+            (
+                'FAILED (%s)\n'
+                % ', '.join(
+                    (total_fails and [f"failures={total_fails}"] or [])
+                    + (total_errors and [f"errors={total_errors}"] or [])
+                )
+            )
+        ]
+
+        return total_tests, '\n'.join(combined)
 
     return total_tests, '\n'.join(combined)
 
@@ -188,8 +194,7 @@ _test_re_str = '%s\n(.*)%s' % (TEST_RESULTS_START, TEST_RESULTS_END)
 TEST_RESULTS_RE = re.compile(_test_re_str, re.DOTALL | re.M)
 
 def get_test_results(raw_return):
-    test_results = TEST_RESULTS_RE.search(raw_return)
-    if test_results:
+    if test_results := TEST_RESULTS_RE.search(raw_return):
         try:
             return eval(test_results.group(1))
         except:
@@ -202,16 +207,16 @@ def get_test_results(raw_return):
 
 def make_complete_failure_error(result):
     return (
-        "ERROR: all_tests_for (%s.AllTestCases)" % result['module'],
-        "Complete Failure (ret code: %s)" % result['return_code'],
-        result['test_file'], 
+        f"ERROR: all_tests_for ({result['module']}.AllTestCases)",
+        f"Complete Failure (ret code: {result['return_code']})",
+        result['test_file'],
         '1',
     )
     
 # For combined results, plural
 def test_failures(results):
     errors = {}
-    total =  sum([v.get('num_tests', 0) for v in results.values()])
+    total = sum(v.get('num_tests', 0) for v in results.values())
     for module, result in results.items():
         num_errors = (
             len(result.get('failures', [])) + len(result.get('errors', []))
@@ -221,7 +226,8 @@ def test_failures(results):
             result['errors'].append(make_complete_failure_error(result))
             num_errors += 1
             total += 1
-        if num_errors: errors.update({module:result})
+        if num_errors:
+            errors[module] = result
 
     return total, errors
 
@@ -270,8 +276,8 @@ def run_test(module, **kwds):
             "should be: %s\n is using: %s" % (unittest.__file__,
                                               m.unittest.__file__)
         )
-    
-    print ('loading %s' % module)
+
+    print(f'loading {module}')
 
     test = unittest.defaultTestLoader.loadTestsFromName(module)
     suite.addTest(test)
@@ -289,12 +295,11 @@ def run_test(module, **kwds):
 
     results   = {module:from_namespace(locals(), RESULTS_TEMPLATE)}
 
-    if not option_nosubprocess:
-        print (TEST_RESULTS_START)
-        print (pformat(results))
-        print (TEST_RESULTS_END)
-    else:
+    if option_nosubprocess:
         return results
+    print (TEST_RESULTS_START)
+    print (pformat(results))
+    print (TEST_RESULTS_END)
 
 ################################################################################
 
@@ -312,7 +317,7 @@ if __name__ == '__main__':
             run_from = 'pygame.tests.go'
         else:
             run_from = os.path.join(main_dir, 'run_tests.py')
-        sys.exit('No test module provided; consider using %s instead' % run_from)
+        sys.exit(f'No test module provided; consider using {run_from} instead')
     run_test(args[0],
              incomplete=options.incomplete,
              nosubprocess=options.nosubprocess)

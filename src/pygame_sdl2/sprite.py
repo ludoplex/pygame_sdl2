@@ -317,8 +317,7 @@ class AbstractGroup(object):
         self.spritedict[sprite] = 0
 
     def remove_internal(self, sprite):
-        r = self.spritedict[sprite]
-        if r:
+        if r := self.spritedict[sprite]:
             self.lostsprites.append(r)
         del self.spritedict[sprite]
 
@@ -441,11 +440,10 @@ class AbstractGroup(object):
                                 return_value = True
                             else:
                                 return False
+                    elif self.has_internal(sprite):
+                        return_value = True
                     else:
-                        if self.has_internal(sprite):
-                            return_value = True
-                        else:
-                            return False
+                        return False
 
         return return_value
 
@@ -693,10 +691,7 @@ class LayeredUpdates(AbstractGroup):
 
         if not sprites:
             return
-        if 'layer' in kwargs:
-            layer = kwargs['layer']
-        else:
-            layer = None
+        layer = kwargs.get('layer', None)
         for sprite in sprites:
             # It's possible that some sprite is also an iterator.
             # If this is the case, we should add the sprite itself,
@@ -766,12 +761,11 @@ class LayeredUpdates(AbstractGroup):
             newrect = surface_blit(spr.image, spr.rect)
             if rec is init_rect:
                 dirty_append(newrect)
+            elif newrect.colliderect(rec):
+                dirty_append(newrect.union(rec))
             else:
-                if newrect.colliderect(rec):
-                    dirty_append(newrect.union(rec))
-                else:
-                    dirty_append(newrect)
-                    dirty_append(rec)
+                dirty_append(newrect)
+                dirty_append(rec)
             spritedict[spr] = newrect
         return dirty
 
@@ -786,8 +780,7 @@ class LayeredUpdates(AbstractGroup):
         _sprites = self._spritelist
         rect = Rect(pos, (0, 0))
         colliding_idx = rect.collidelistall([sprite.rect for sprite in _sprites])
-        colliding = [_sprites[i] for i in colliding_idx]
-        return colliding
+        return [_sprites[i] for i in colliding_idx]
 
     def get_sprite(self, idx):
         """return the sprite at the index idx from the groups sprites
@@ -1057,7 +1050,7 @@ class LayeredDirty(LayeredUpdates):
             # 1. find dirty area on screen and put the rects into _update
             # still not happy with that part
             for spr in _sprites:
-                if 0 < spr.dirty:
+                if spr.dirty > 0:
                     # chose the right rect
                     if spr.source_rect:
                         _union_rect = _rect(spr.rect.topleft,
@@ -1068,7 +1061,7 @@ class LayeredDirty(LayeredUpdates):
                     _union_rect_collidelist = _union_rect.collidelist
                     _union_rect_union_ip = _union_rect.union_ip
                     i = _union_rect_collidelist(_update)
-                    while -1 < i:
+                    while i > -1:
                         _union_rect_union_ip(_update[i])
                         del _update[i]
                         i = _union_rect_collidelist(_update)
@@ -1079,7 +1072,7 @@ class LayeredDirty(LayeredUpdates):
                         _union_rect_collidelist = _union_rect.collidelist
                         _union_rect_union_ip = _union_rect.union_ip
                         i = _union_rect_collidelist(_update)
-                        while -1 < i:
+                        while i > -1:
                             _union_rect_union_ip(_update[i])
                             del _update[i]
                             i = _union_rect_collidelist(_update)
@@ -1094,7 +1087,7 @@ class LayeredDirty(LayeredUpdates):
 
             # 2. draw
             for spr in _sprites:
-                if 1 > spr.dirty:
+                if spr.dirty < 1:
                     if spr._visible:
                         # sprite not dirty; blit only the intersecting part
                         _spr_rect = spr.rect
@@ -1136,11 +1129,7 @@ class LayeredDirty(LayeredUpdates):
         # timing for switching modes
         # How may a good threshold be found? It depends on the hardware.
         end_time = get_ticks()
-        if end_time-start_time > self._time_threshold:
-            self._use_update = False
-        else:
-            self._use_update = True
-
+        self._use_update = end_time-start_time <= self._time_threshold
 ##        # debug
 ##        print "               check: using dirty rects:", self._use_update
 
@@ -1242,10 +1231,7 @@ class GroupSingle(AbstractGroup):
         return GroupSingle(self.__sprite)
 
     def sprites(self):
-        if self.__sprite is not None:
-            return [self.__sprite]
-        else:
-            return []
+        return [self.__sprite] if self.__sprite is not None else []
 
     def add_internal(self, sprite):
         if self.__sprite is not None:
@@ -1547,14 +1533,12 @@ def groupcollide(groupa, groupb, dokilla, dokillb, collided=None):
     SC = spritecollide
     if dokilla:
         for s in groupa.sprites():
-            c = SC(s, groupb, dokillb, collided)
-            if c:
+            if c := SC(s, groupb, dokillb, collided):
                 crashed[s] = c
                 s.kill()
     else:
         for s in groupa:
-            c = SC(s, groupb, dokillb, collided)
-            if c:
+            if c := SC(s, groupb, dokillb, collided):
                 crashed[s] = c
     return crashed
 

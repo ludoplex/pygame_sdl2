@@ -34,12 +34,12 @@ class MissingModule(object):
 
 
 def try_import(name):
-    full_name = "pygame_sdl2." + name
+    full_name = f"pygame_sdl2.{name}"
 
     try:
         module = importlib.import_module(full_name)
     except (IOError, ImportError) as e:
-        module = MissingModule(full_name, "Could not import {}: {}".format(full_name, str(e)))
+        module = MissingModule(full_name, f"Could not import {full_name}: {str(e)}")
 
     globals()[name] = module
     sys.modules[full_name] = module

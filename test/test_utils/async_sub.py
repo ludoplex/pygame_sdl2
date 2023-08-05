@@ -18,10 +18,7 @@ import tempfile
 def geterror ():
     return sys.exc_info()[1]
 
-if sys.version_info >= (3,):
-    null_byte = '\x00'.encode('ascii')
-else:
-    null_byte = '\x00'
+null_byte = '\x00'.encode('ascii') if sys.version_info >= (3,) else '\x00'
 
 if sys.platform == 'win32':
     if sys.version_info >= (3,):
@@ -95,14 +92,11 @@ class Popen(subprocess.Popen):
         return self.send(input), self.recv(maxsize), self.recv_err(maxsize)
     
     def read_async(self,  wait=.1, e=1, tr=5, stderr=0):
-        if tr < 1:
-            tr = 1
+        tr = max(tr, 1)
         x = time.time()+ wait
         y = []
         r = ''
-        pr = self.recv
-        if stderr:
-            pr = self.recv_err
+        pr = self.recv_err if stderr else self.recv
         while time.time() < x or r:
             r = pr()
             if r is None:
@@ -244,13 +238,12 @@ def proc_in_time_or_kill(cmd, time_out, wd = None, env = None):
         response += [proc.read_async(wait=0.1, e=0)]
 
     if ret_code is None:
-        ret_code = '"Process timed out (time_out = %s secs) ' % time_out
+        ret_code = f'"Process timed out (time_out = {time_out} secs) '
         try:
             proc.kill()
             ret_code += 'and was successfully terminated"'
         except Exception:
-            ret_code += ('and termination failed (exception: %s)"' %
-                         (geterror(),))
+            ret_code += f'and termination failed (exception: {geterror()})"'
 
     return ret_code, ''.join(response)
 
@@ -272,7 +265,7 @@ def _example():
         shell, commands, tail = ('cmd', ('echo "hello"', 'echo "HELLO WORLD"'), '\r\n')
     else:
         shell, commands, tail = ('sh', ('ls', 'echo HELLO WORLD'), '\n')
-    
+
     a = Popen(shell, stdin=PIPE, stdout=PIPE)
     sys.stdout.write(a.read_async())
     sys.stdout.write(" ")
@@ -280,7 +273,7 @@ def _example():
         a.send_all(cmd + tail)
         sys.stdout.write(a.read_async())
         sys.stdout.write(" ")
-    a.send_all('exit' + tail)
+    a.send_all(f'exit{tail}')
     print (a.read_async(e=0))
     a.wait()
 
@@ -288,4 +281,3 @@ def _example():
     
 if __name__ == '__main__':
     if 1: unittest.main()
-    else: _example()

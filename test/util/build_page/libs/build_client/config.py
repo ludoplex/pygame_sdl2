@@ -68,7 +68,7 @@ class config_obj(object):
         ))
 
         if open_in_browser:
-            config_html_file = '%s_config.html' % self.platform_id
+            config_html_file = f'{self.platform_id}_config.html'
             config_html = file(config_html_file, 'w')
             config_html.write (html)
             config_html.close()
@@ -99,8 +99,7 @@ def config_to_dict(config_file):
 ################################################################################
 
 def update_cmds_with_alternate_python(config):
-    python = config['DEFAULT'].get('python_path')
-    if python:
+    if python := config['DEFAULT'].get('python_path'):
         for key in config:
             if key.endswith('_cmd'): config[key][0] = python
 
@@ -119,12 +118,12 @@ def merge_defaults_and_objectify_config(config_file):
 
 def get_and_brand_latest_svn(src_path):
     if not os.path.exists(src_path): os.makedirs(src_path)
-    
+
     rc, output = callproc.ExecuteAssertSuccess (
         ["svn","co","svn://seul.org/svn/pygame/trunk", src_path] )
-    
+
     rev_match = re.search(r"(At)|(Checked out) revision ([0-9]+)\.", output)
-    latest_rev = rev_match.group(3)
+    latest_rev = rev_match[3]
 
     callproc.ExecuteAssertSuccess(["svn","revert",src_path,"-R"])
 
@@ -137,11 +136,11 @@ def get_and_brand_latest_svn(src_path):
     return int(latest_rev)
 
 def get_platform_and_previous_rev(config, config_file):
-    config.platform_id = re.search (
-        r"build_([^.]+).ini", os.path.basename(config_file) ).group(1)
-    
-    config.last_rev_filename = normp(
-        "./last_rev_%s.txt" % config.platform_id )
+    config.platform_id = re.search(
+        r"build_([^.]+).ini", os.path.basename(config_file)
+    )[1]
+
+    config.last_rev_filename = normp(f"./last_rev_{config.platform_id}.txt")
     try:
         config.previous_rev = int(file(config.last_rev_filename, "r").read())
     except:
@@ -155,13 +154,13 @@ def extra_flags(flags):
 def configure(config_file):
     # READ INI FILE
     c = merge_defaults_and_objectify_config(config_file)    
-    
+
     # SUBVERSION
     get_platform_and_previous_rev(c, config_file)
-    
+
     # Possibly updated between builds?? Here's a good spot?
     c.latest_rev = get_and_brand_latest_svn(c.src_path)
-    
+
     # WORKING DIR 
     c.working_dir = normp(os.path.dirname(__file__))
     os.chdir(c.working_dir)
@@ -199,8 +198,8 @@ def configure(config_file):
 
     # FILES TO ADD TO RESULTS ZIP
     c.buildresult_files = [
-       normp('config', 'build_%s.ini' % c.platform_id),
-       normp(c.src_path, 'Setup'),
+        normp('config', f'build_{c.platform_id}.ini'),
+        normp(c.src_path, 'Setup'),
     ]
 
     return c
@@ -208,7 +207,7 @@ def configure(config_file):
 ################################################################################
 
 def get_configs(args):
-    search = "./config/build_%s.ini" % (args and args[0] or '*')
+    search = f"./config/build_{args and args[0] or '*'}.ini"
     config_file_list = glob.glob(search)
 
     for config_file in config_file_list:        

@@ -28,11 +28,7 @@ def within(a,b, error_range):
     return abs(a - b) < error_range
 
 def within_seq(a,b,error_range):
-    for x,y in zip(a,b):
-        #print x,y
-        if not within(x,y,error_range):
-            return 0
-    return 1
+    return next((0 for x, y in zip(a,b) if not within(x,y,error_range)), 1)
 
 class MovieTypeTest( unittest.TestCase ):            
     def test_render_frame__off_screen(self):

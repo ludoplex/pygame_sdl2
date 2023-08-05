@@ -34,9 +34,7 @@ class KeyModuleTest(unittest.TestCase):
         self.assert_(True) 
 
     def test_set_mods(self):
-        if 1:
-            if 1:
-                assert False 
+        assert False 
 
     def test_set_repeat(self):
         self.assert_(True) 

@@ -139,10 +139,8 @@ class CDTypeTest(unittest.TestCase):
 
         if self.cd:
             cd_name = self.cd.get_name()
-    
-            self.assert_ (
-                question('Is %s the correct name for the cd drive?' % cd_name)
-            )
+
+            self.assert_(question(f'Is {cd_name} the correct name for the cd drive?'))
 
     def todo_test_get_all(self):
 

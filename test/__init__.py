@@ -20,9 +20,8 @@ directly.
 
 """
 
-if __name__ == 'pygame.tests':
-    from pygame.tests.test_utils.run_tests import run
-elif __name__ == '__main__':
+
+if __name__ == '__main__':
     import os
     import sys
     pkg_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -36,5 +35,7 @@ elif __name__ == '__main__':
         import pygame.tests.__main__
     else:
         import test.__main__
+elif __name__ == 'pygame.tests':
+    from pygame.tests.test_utils.run_tests import run
 else:
     from test.test_utils.run_tests import run

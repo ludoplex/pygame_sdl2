@@ -41,7 +41,7 @@ def TestCase_run(self, result=None):
     if result is None: result = self.defaultTestResult()
     result.startTest(self)
     testMethod = getattr(self, self._testMethodName)
-    
+
     try:
 
     ########################################################################
@@ -51,19 +51,19 @@ def TestCase_run(self, result=None):
         result.tests[self.dot_syntax_name()] = {
             'times' : [],
         }
-        
+
         tests = result.tests[self.dot_syntax_name()]
         (realerr, realout), (stderr, stdout) =  redirect_output()
         test_tags = list(get_tags(self.__class__, testMethod))
 
-        if 0 or 'interactive' in test_tags:       # DEBUG
+        if 'interactive' in test_tags:       # DEBUG
             restore_output(realerr, realout)
 
     ########################################################################
 
-        for i in range(self.times_run):
+        for _ in range(self.times_run):
             t = time.time()
-            
+
             try:
                 self.setUp()
             except KeyboardInterrupt:
@@ -82,7 +82,7 @@ def TestCase_run(self, result=None):
                 raise
             except:
                 result.addError(self, self._exc_info())
-            
+
             try:
                 self.tearDown()
             except KeyboardInterrupt:
@@ -90,17 +90,12 @@ def TestCase_run(self, result=None):
             except:
                 result.addError(self, self._exc_info())
                 ok = False
-            
-            
+
+
             tests["times"] += [time.time() -t]
-            
+
             if not ok: break            
-        
-            # if ok:
-            #     if i == 0:
-            #         result.addSuccess(self)
-            # else: break
-    
+
         if ok:
             result.addSuccess(self)
     ########################################################################
@@ -111,8 +106,6 @@ def TestCase_run(self, result=None):
         tests["stdout"] = StringIOContents(stdout)
         tests["stderr"] = StringIOContents(stderr)
         tests["tags"]   = test_tags
-
-    ########################################################################
 
     finally:
         result.stopTest(self)
@@ -153,9 +146,9 @@ def errorHandling(key):
 def printErrorList(self, flavour, errors):
     for test, err in [(e[0], e[1]) for e in errors]:
         self.stream.writeln(self.separator1)
-        self.stream.writeln("%s: %s" % (flavour, test))
+        self.stream.writeln(f"{flavour}: {test}")
         self.stream.writeln(self.separator2)
-        self.stream.writeln("%s" % err)
+        self.stream.writeln(f"{err}")
 
         # DUMP REDIRECTED STDERR / STDOUT ON ERROR / FAILURE
         if self.show_redirected_on_errors:
@@ -187,20 +180,21 @@ class TestTags:
             module_tags = getattr(parent_module, '__tags__', [])
             class_tags  = getattr(parent_class,  '__tags__', [])
 
-            tags = TAGS_RE.search(getdoc(meth) or '')
-            if tags: test_tags = [t.strip() for t in tags.group(1).split(',')]
-            else:    test_tags = []
-        
+            if tags := TAGS_RE.search(getdoc(meth) or ''):
+                if tags: test_tags = [t.strip() for t in tags.group(1).split(',')]
+            else:
+                test_tags = []
+
             combined = set()
             for tags in (module_tags, class_tags, test_tags):
                 if not tags: continue
-        
-                add    = set([t for t in tags if not t.startswith('-')])
-                remove = set([t[1:] for t in tags if t not in add])
-        
+
+                add = {t for t in tags if not t.startswith('-')}
+                remove = {t[1:] for t in tags if t not in add}
+
                 if add:     combined.update(add)
                 if remove:  combined.difference_update(remove)
-    
+
             self.memoized[key] = combined
 
         return self.memoized[key]
@@ -221,22 +215,22 @@ def CmpToKey(mycmp):
 
 def getTestCaseNames(self, testCaseClass):
     def test_wanted(attrname, testCaseClass=testCaseClass,
-                              prefix=self.testMethodPrefix):
-        if not attrname.startswith(prefix): return False
-        else:
-            actual_attr = getattr(testCaseClass, attrname)
-            return (
-                 hasattr(actual_attr, '__call__') and
-                 not [t for t in  get_tags(testCaseClass, actual_attr)
-                      if t in self.exclude]
-            )
+                                  prefix=self.testMethodPrefix):
+        if not attrname.startswith(prefix):
+            if not attrname.startswith(prefix): return False
+        actual_attr = getattr(testCaseClass, attrname)
+        return (
+             hasattr(actual_attr, '__call__') and
+             not [t for t in  get_tags(testCaseClass, actual_attr)
+                  if t in self.exclude]
+        )
 
     # TODO:
 
     # Replace test_not_implemented mechanism with technique that names the tests
     # todo_test_xxxxxx, then when wanting to fail them, loads any members that
     # startswith(test_prefix)
-    
+
     # REGEX FOR TEST_NOT_IMPLEMENTED
     # SEARCH:
     #    def (test_[^ ]+)((?:\s+#.*\n?)+\s+)self\.assert_\(test_not_implemented\(\)\)
@@ -282,7 +276,7 @@ def patch(**kwds):
         unittest.TestLoader.testMethodPrefix = (
             unittest.TestLoader.testMethodPrefix, 'todo_'
         )
-    
+
     # Randomizing    
     unittest.TestLoader.randomize_tests = option_randomize or option_seed
 
@@ -292,8 +286,9 @@ def patch(**kwds):
     # Timing
     unittest.TestCase.times_run = option_timings
     unittest.TestCase.run = TestCase_run
-    unittest.TestCase.dot_syntax_name = lambda self: (
-        "%s.%s"% (self.__class__.__name__, self._testMethodName) )
+    unittest.TestCase.dot_syntax_name = (
+        lambda self: f"{self.__class__.__name__}.{self._testMethodName}"
+    )
 
     # Error logging
     unittest.TestResult.show_redirected_on_errors = option_show_output

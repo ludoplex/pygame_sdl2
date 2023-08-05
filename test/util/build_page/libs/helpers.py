@@ -28,7 +28,7 @@ class ResultsZip(zipfile.ZipFile):
     def __init__(self, *args, **kw):
         zipfile.ZipFile.__init__(self, *args, **kw)
         self.config   = self.eval('config.txt')
-        self.text_files = set(t for t in self.namelist() if t != self.installer)
+        self.text_files = {t for t in self.namelist() if t != self.installer}
 
     @property
     def installer(self):
@@ -43,7 +43,7 @@ class ResultsZip(zipfile.ZipFile):
         return self.config[attr]
 
     def archive_text(self, path):
-        create_zip(path, **dict((k, self.read(k)) for k in self.text_files))
+        create_zip(path, **{k: self.read(k) for k in self.text_files})
 
     def html(self, the_main):
         all_tabs = []
@@ -59,7 +59,7 @@ class ResultsZip(zipfile.ZipFile):
 
             if fslug == the_main:
                 contents = ehtml(self.read(f), 'utf-8')
-                contents = "<div class='t%s'><pre>%s</pre></div>" % (i, contents)
+                contents = f"<div class='t{i}'><pre>{contents}</pre></div>"
 
         return '\n'.join(all_tabs), contents
         

@@ -35,7 +35,7 @@ import sys
 def setup_env(name):
     # If PYGAME_SDL2_CC or PYGAME_SDL2_LD are in the environment, and CC or LD are not, use them.
 
-    renpy_name = "PYGAME_SDL2_" + name
+    renpy_name = f"PYGAME_SDL2_{name}"
     if (renpy_name in os.environ) and (name not in os.environ):
         os.environ[name] = os.environ[renpy_name]
 
@@ -93,11 +93,7 @@ else:
 
         setuplib.package_data.extend(temporary_package_data)
 
-if android:
-    png = "png16"
-else:
-    png = "png"
-
+png = "png16" if android else "png"
 pymodule("pygame_sdl2.__init__")
 pymodule("pygame_sdl2.compat")
 pymodule("pygame_sdl2.threads.__init__")
@@ -133,10 +129,10 @@ cython("pygame_sdl2.render", libs=['SDL2_image'] + sdl_libs)
 
 headers = [
     "src/pygame_sdl2/pygame_sdl2.h",
-    gen + "/pygame_sdl2.rwobject_api.h",
-    gen + "/pygame_sdl2.surface_api.h",
-    gen + "/pygame_sdl2.display_api.h",
-    ]
+    f"{gen}/pygame_sdl2.rwobject_api.h",
+    f"{gen}/pygame_sdl2.surface_api.h",
+    f"{gen}/pygame_sdl2.display_api.h",
+]
 
 if __name__ == "__main__":
     setup(

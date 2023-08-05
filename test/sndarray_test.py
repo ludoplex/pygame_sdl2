@@ -32,8 +32,7 @@ else:
              Int8 as int8, Int16 as int16, UInt8 as uint8, UInt16 as uint16, \
              array, alltrue
     else:
-        print ("Unknown array type %s; tests skipped" %
-               (pygame.sndarray.get_arraytype(),))
+        print(f"Unknown array type {pygame.sndarray.get_arraytype()}; tests skipped")
         arraytype = ""
 
 
@@ -94,10 +93,10 @@ class SndarrayTest (unittest.TestCase):
         if not arraytype:
             self.fail("no array package installed")
 
-        self.failUnless((pygame.sndarray.get_arraytype() in
-                         ['numpy', 'numeric']),
-                        ("unknown array type %s" %
-                         pygame.sndarray.get_arraytype()))
+        self.failUnless(
+            pygame.sndarray.get_arraytype() in ['numpy', 'numeric'],
+            f"unknown array type {pygame.sndarray.get_arraytype()}",
+        )
 
     def test_get_arraytypes(self):
         if not arraytype:
@@ -119,8 +118,7 @@ class SndarrayTest (unittest.TestCase):
             self.failUnless('numeric' in arraytypes)
 
         for atype in arraytypes:
-            self.failUnless(atype in ['numpy', 'numeric'],
-                            "unknown array type %s" % atype)
+            self.failUnless(atype in ['numpy', 'numeric'], f"unknown array type {atype}")
 
     def test_make_sound(self):
         if not arraytype:

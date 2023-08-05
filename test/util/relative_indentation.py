@@ -41,7 +41,7 @@ class Template(object):
         self.find_ph_offsets()
 
     def find_ph_offsets(self):
-        self.ph_offsets = dict()
+        self.ph_offsets = {}
 
         for lines in self.template.split('\n'):
             for match in ph_re.finditer(lines):
@@ -49,10 +49,10 @@ class Template(object):
 
     def render(self, replacements = None, **kw):
         if not replacements: replacements = kw
-        
+
         # missing_ph = [k for k in self.ph_offsets if k not in replacements]
         # excess_repl = [k for k in replacements if k not in self.ph_offsets]
-        
+
         # A lot more performant
         assert len(replacements) == len(self.ph_offsets)
 
@@ -64,19 +64,19 @@ class Template(object):
         #     'Excess replacements: %s'  % ', '.join(excess_repl)
         # )
         # if errors: raise ValueError("\n".join(errors))
-                 
+
         template = self.template[:]
         for ph_name, replacement in replacements.iteritems():
             ph_offset = self.ph_offsets[ph_name]
-    
+
             ph_search = re.search ("\${%s}" % ph_name, template, multi_line_re)
-            
+
             ph_start, ph_end = ph_search.span()
-            
+
             padded = pad_secondary_lines(replacement, ph_offset * ' ')
-    
-            template = template[0:ph_start] + padded + template[ph_end:]
-    
+
+            template = template[:ph_start] + padded + template[ph_end:]
+
         return template
 
 if __name__ == "__main__":
