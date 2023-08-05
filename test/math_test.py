@@ -284,10 +284,8 @@ class Vector2TypeTest(unittest.TestCase):
         self.assertEqual(id(it1), id(it1.__iter__()))
         self.assertEqual(list(it1), list(it2));
         self.assertEqual(list(self.v1.__iter__()), self.l1)
-        idx = 0
-        for val in self.v1:
+        for idx, val in enumerate(self.v1):
             self.assertEqual(val, self.v1[idx])
-            idx += 1
         
     def test_rotate(self):
         v1 = Vector2(1, 0)

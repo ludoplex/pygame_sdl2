@@ -24,15 +24,14 @@ def random_mask(size = (100,100)):
     """random_mask(size=(100,100)): return Mask
     Create a mask of the given size, with roughly half the bits set at random."""
     m = pygame.Mask(size)
-    for i in range(size[0] * size[1] // 2):
+    for _ in range(size[0] * size[1] // 2):
         x, y = random.randint(0,size[0] - 1), random.randint(0, size[1] - 1)
         m.set_at((x,y))
     return m
 
 def maskFromSurface(surface, threshold = 127):
     mask = pygame.Mask(surface.get_size())
-    key = surface.get_colorkey()
-    if key:
+    if key := surface.get_colorkey():
         for y in range(surface.get_height()):
             for x in range(surface.get_width()):
                 if surface.get_at((x+0.1,y+0.1)) != key:
@@ -459,15 +458,4 @@ class MaskModuleTest(unittest.TestCase):
 
 if __name__ == '__main__':
 
-    if 1:
-        unittest.main()
-    else:
-        mask_from_surface = maskFromSurface
-
-        surf = pygame.Surface((70,70), SRCALPHA, 32)
-        #surf = surf.convert_alpha()
-        surf.set_at((0,0), (255,255,255,0))
-        print (surf.get_at((0,0)))
-
-        print ("asdf")
-        print (surf)
+    unittest.main()

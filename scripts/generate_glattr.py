@@ -11,7 +11,7 @@ def main():
 
     with open(os.path.join(ROOT, "include", "glattr.pxi"), "w") as f:
         for name in enums["SDL_GLattr"]:
-            f.write("{} = {}\n".format(name[4:], name))
+            f.write(f"{name[4:]} = {name}\n")
 
 if __name__ == "__main__":
     main()

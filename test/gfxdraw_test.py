@@ -31,7 +31,7 @@ def intensity(c, i):
     unaltered color.
 
     """
-    r, g, b = c[0:3]
+    r, g, b = c[:3]
     if 0 <= i <= 127:
         # Darken
         return ((r * i) // 127, (g * i) // 127, (b * i) // 127)
@@ -47,11 +47,11 @@ class GfxdrawDefaultTest( unittest.TestCase ):
     foreground_color = (128, 64, 8)
     background_color = (255, 255, 255)
 
-    def make_palette(base_color):
+    def make_palette(self):
         """Return color palette that is various intensities of base_color"""
         # Need this function for Python 3.x so the base_color
         # is within the scope of the list comprehension.
-        return [intensity(base_color, i) for i in range(0, 256)]
+        return [intensity(self, i) for i in range(0, 256)]
 
     default_palette = make_palette(foreground_color)
 
@@ -72,13 +72,12 @@ class GfxdrawDefaultTest( unittest.TestCase ):
         self.failIfEqual(sc, color, fail_msg)
 
     def setUp(self):
-        Surface = pygame.Surface
         size = self.default_size
-        palette = self.default_palette
         if not self.is_started:
             # Necessary for Surface.set_palette.
             pygame.init()
             pygame.display.set_mode((1, 1))
+            Surface = pygame.Surface
             # Create test surfaces
             self.surfaces = [Surface(size, 0, 8),
                              Surface(size, 0, 16),
@@ -86,6 +85,7 @@ class GfxdrawDefaultTest( unittest.TestCase ):
                              Surface(size, 0, 32),
                              Surface(size, SRCALPHA, 16),
                              Surface(size, SRCALPHA, 32)]
+            palette = self.default_palette
             self.surfaces[0].set_palette(palette)
             # Special pixel formats
             for i in range(1, 6):

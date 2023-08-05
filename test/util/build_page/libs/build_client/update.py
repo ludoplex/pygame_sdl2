@@ -20,10 +20,6 @@ import upload_results
 from regexes import *
 from helpers import *
 
-################################################################################
-# Results
-
-BUILD_FAILED               = "Build FAILED, Tests not run"
 BUILD_LINK_FAILED          = "Link FAILED, Tests not run"
 
 BUILD_FAILED_EXCEPTION     = "Build FAILED, Exception"
@@ -44,19 +40,11 @@ ESCAPE_KEYS = ('traceback', 'blame_line')
 
 FILE_INFO = "%(error_file)s:%(line)s last rev: %(revision)s:%(user)s"
 
+BUILD_FAILED = "Build FAILED, Tests not run"
 FORMATS = {
-
-    TESTS_FAILED : FILE_INFO  + (
-        '<br />%(test)s'
-        # '<br /><pre>%(traceback)s</pre>' 
-        ),
-
-    BUILD_FAILED : FILE_INFO  + (
-        '<br>ERROR: %(message)s' ),
-
-    "BUILD_WARNINGS" : FILE_INFO + (
-        '<br>warning:%(message)s'
-        '<br><code>%(blame_line)s</code>'),
+    TESTS_FAILED: f'{FILE_INFO}<br />%(test)s',
+    BUILD_FAILED: f'{FILE_INFO}<br>ERROR: %(message)s',
+    "BUILD_WARNINGS": f'{FILE_INFO}<br>warning:%(message)s<br><code>%(blame_line)s</code>',
 }
 
 def errors_by_file_4_web(errors_by_file, format, cb = None, join='<hr>'):
@@ -113,9 +101,9 @@ def categorize_errors_by_file(errors, add_blame = 1):
 ################################################################################
 
 def build_warnings_html(build_output):
-    warnings = [w.groupdict() for w in BUILD_WARNINGS_RE.finditer(build_output)]
-
-    if warnings:
+    if warnings := [
+        w.groupdict() for w in BUILD_WARNINGS_RE.finditer(build_output)
+    ]:
         warnings_by_file = categorize_errors_by_file(warnings)
         return errors_by_file_4_web (warnings_by_file, "BUILD_WARNINGS")
 
@@ -140,8 +128,7 @@ def parse_test_results(ret_code, output):
 
         return TESTS_FAILED, web_friendly
 
-    elif ( (failed_test and not errors) or
-           (ret_code and not failed_test) ):
+    elif failed_test or ret_code:
 
         return TESTS_INVALID, output.replace("\n", "<br>")
 
@@ -154,32 +141,26 @@ def parse_build_results(ret_code, output):
     # SUCCESS
     if ret_code is 0: return BUILD_SUCCESSFUL, ''
 
-    # ERRORS
-    errors = [e.groupdict() for e in BUILD_ERRORS_RE.finditer(output)]
-    if errors:
+    if errors := [e.groupdict() for e in BUILD_ERRORS_RE.finditer(output)]:
         errors_by_file = categorize_errors_by_file (errors)
         web_friendly = errors_by_file_4_web(errors_by_file, BUILD_FAILED)
         return BUILD_FAILED, web_friendly
 
-    # LINK ERRORS
-    link_errors = [
+    if link_errors := [
         "%(source_name)s:%(message)s<br>" % s.groupdict()
         for s in LINK_ERRORS_RE.finditer(output)
-    ]
-    if link_errors: return BUILD_LINK_FAILED, ''.join(link_errors)
-
-    # EXCEPTIONS 
-    exceptions = BUILD_TRACEBACK_RE.search(output)
-    if exceptions:
+    ]:
+        return BUILD_LINK_FAILED, ''.join(link_errors)
+    if exceptions := BUILD_TRACEBACK_RE.search(output):
         errors = exceptions.groupdict()['traceback'].replace("\n", "<br>")
         return BUILD_FAILED_EXCEPTION, errors
-    
-    # UNKNOWN ERRORS
-    error_matches = re.findall(r"^error: ([^\r\n]+)", output, re.MULTILINE)
-    if error_matches:
-        errors = ''.join(["%s<br>" % m for m in error_matches])
+
+    if error_matches := re.findall(
+        r"^error: ([^\r\n]+)", output, re.MULTILINE
+    ):
+        errors = ''.join([f"{m}<br>" for m in error_matches])
         return BUILD_FAILED_UNKNOWN, errors
-    
+
     # ELSE
     return BUILD_FAILED_UNPARSEABLE, output.replace("\n", "<br>")
 
@@ -188,8 +169,9 @@ def parse_build_results(ret_code, output):
 def dumped(f):
     def dump():
         dump.ret_code, dump.output = f()
-        write_file_lines('%s_dump' % normp('output', f.__name__), [dump.output])
+        write_file_lines(f"{normp('output', f.__name__)}_dump", [dump.output])
         return dump.ret_code, dump.output
+
     dump.__name__ = f.__name__
     return dump
 
@@ -226,13 +208,13 @@ def prepare_installer( build_result):
     installer_dist_path = glob.glob (
         normp(config.dist_path, config.package_mask))[0]
 
-    installer_filename = "%s_%s" % (
-        config.platform_id, os.path.basename(installer_dist_path)
+    installer_filename = (
+        f"{config.platform_id}_{os.path.basename(installer_dist_path)}"
     )
 
     if build_result is not TESTS_PASSED:
-        installer_filename = "failed_tests_%s" % installer_filename
-    
+        installer_filename = f"failed_tests_{installer_filename}"
+
     output_installer_path = normp('./output', installer_filename)
     shutil.move(installer_dist_path, output_installer_path)
 
@@ -302,9 +284,7 @@ def debugging(f):
             config_dump = getattr(config, 'htmlDump', '')
             config_dump = config_dump and config_dump()
 
-            html_formatted_info = "%s<br />%s" % ( 
-                cgitb.html(sys.exc_info()), config_dump
-            )
+            html_formatted_info = f"{cgitb.html(sys.exc_info())}<br />{config_dump}"
             dump_and_open_in_browser ( html_formatted_info )
             # TODO: email breakage info to maintainer
             raise

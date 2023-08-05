@@ -52,10 +52,7 @@ android = "PYGAME_SDL2_ANDROID" in os.environ
 # True if we're building on ios.
 ios = "PYGAME_SDL2_IOS" in os.environ
 
-windows = platform.win32_ver()[0]
-
-# The cython command.
-if windows:
+if windows := platform.win32_ver()[0]:
     cython_command = os.path.join(os.path.dirname(sys.executable), "Scripts", "cython.exe")
 else:
     cython_command = "cython"
@@ -76,7 +73,7 @@ def system_path(path):
     """
 
     if "MSYSTEM" in os.environ:
-        path = subprocess.check_output([ "sh", "-c", "cmd //c echo " + path ]).strip()
+        path = subprocess.check_output(["sh", "-c", f"cmd //c echo {path}"]).strip()
 
     return path
 
@@ -173,37 +170,28 @@ def cython(name, source=[], libs=[], compile_if=True, define_macros=[]):
     # Figure out what it depends on.
     deps = [ fn ]
 
-    f = open(fn, "r")
-    for l in f:
+    with open(fn, "r") as f:
+        for l in f:
 
-        m = re.search(r'from\s*([\w.]+)\s*cimport', l)
-        if m:
-            deps.append(m.group(1).replace(".", "/") + ".pxd")
-            continue
+            if m := re.search(r'from\s*([\w.]+)\s*cimport', l):
+                deps.append(m[1].replace(".", "/") + ".pxd")
+                continue
 
-        m = re.search(r'cimport\s*([\w.]+)', l)
-        if m:
-            deps.append(m.group(1).replace(".", "/") + ".pxd")
-            continue
+            if m := re.search(r'cimport\s*([\w.]+)', l):
+                deps.append(m[1].replace(".", "/") + ".pxd")
+                continue
 
-        m = re.search(r'include\s*"(.*?)"', l)
-        if m:
-            deps.append(m.group(1))
-            continue
-    f.close()
-
+            if m := re.search(r'include\s*"(.*?)"', l):
+                deps.append(m[1])
+                continue
     # Filter out cython stdlib dependencies.
     deps = [ i for i in deps if (not i.startswith("cpython/")) and (not i.startswith("libc/")) ]
 
     # Determine if any of the dependencies are newer than the c file.
-    c_fn = os.path.join(gen, name + ".c")
-    necessary_gen.append(name + ".c")
+    c_fn = os.path.join(gen, f"{name}.c")
+    necessary_gen.append(f"{name}.c")
 
-    if os.path.exists(c_fn):
-        c_mtime = os.path.getmtime(c_fn)
-    else:
-        c_mtime = 0
-
+    c_mtime = os.path.getmtime(c_fn) if os.path.exists(c_fn) else 0
     out_of_date = False
 
     # print c_fn, "depends on", deps
@@ -216,9 +204,7 @@ def cython(name, source=[], libs=[], compile_if=True, define_macros=[]):
             dep_fn = os.path.join("include", dep_fn)
         elif os.path.exists(os.path.join(gen, dep_fn)):
             dep_fn = os.path.join(gen, dep_fn)
-        elif os.path.exists(dep_fn):
-            pass
-        else:
+        elif not os.path.exists(dep_fn):
             print("{0} depends on {1}, which can't be found.".format(fn, dep_fn))
             sys.exit(-1)
 
@@ -234,19 +220,22 @@ def cython(name, source=[], libs=[], compile_if=True, define_macros=[]):
         print(name, "is out of date.")
 
         try:
-            subprocess.check_call([
-                cython_command,
-                version_flag,
-                "-Iinclude",
-                "-I" + gen,
-                "-a",
-                fn,
-                "-o",
-                c_fn])
+            subprocess.check_call(
+                [
+                    cython_command,
+                    version_flag,
+                    "-Iinclude",
+                    f"-I{gen}",
+                    "-a",
+                    fn,
+                    "-o",
+                    c_fn,
+                ]
+            )
 
         except subprocess.CalledProcessError as e:
             print()
-            print(str(e))
+            print(e)
             print()
             sys.exit(-1)
 
@@ -284,16 +273,16 @@ def setup(name, version, **kwargs):
     """
 
     setuptools.setup(
-        name = name,
-        version = version,
-        ext_modules = extensions,
-        py_modules = py_modules,
-        packages = [ name ],
-        package_dir = { name : 'src/' + name },
-        package_data = { name : package_data },
+        name=name,
+        version=version,
+        ext_modules=extensions,
+        py_modules=py_modules,
+        packages=[name],
+        package_dir={name: f'src/{name}'},
+        package_data={name: package_data},
         zip_safe=False,
-        **kwargs
-        )
+        **kwargs,
+    )
 
 # Start in the directory containing setup.py.
 os.chdir(os.path.abspath(os.path.dirname(sys.argv[0])))

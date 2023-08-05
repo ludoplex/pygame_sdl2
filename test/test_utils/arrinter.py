@@ -21,10 +21,7 @@ except NameError:
         c_ssize_t = c_longlong
 
 
-PY3 = 0
-if sys.version_info >= (3,):
-    PY3 = 1
-
+PY3 = 1 if sys.version_info >= (3,) else 0
 SIZEOF_VOID_P = sizeof(c_void_p)
 if SIZEOF_VOID_P <= sizeof(c_int):
     Py_intptr_t = c_int
@@ -117,10 +114,7 @@ class ArrayInterface(object):
         return getattr(self._inter, name)
 
     def __str__(self):
-        if isinstance(self.desc, tuple):
-            ver = self.desc[0]
-        else:
-            ver = "N/A"
+        ver = self.desc[0] if isinstance(self.desc, tuple) else "N/A"
         return ("nd: %i\n"
                 "typekind: %s\n"
                 "itemsize: %i\n"
@@ -134,15 +128,18 @@ class ArrayInterface(object):
                  format_strides(self.nd, self.strides), ver))
 
 def format_flags(flags):
-    names = []
-    for flag, name in [(PAI_CONTIGUOUS, 'CONTIGUOUS'),
-                       (PAI_FORTRAN, 'FORTRAN'),
-                       (PAI_ALIGNED, 'ALIGNED'),
-                       (PAI_NOTSWAPPED, 'NOTSWAPPED'),
-                       (PAI_WRITEABLE, 'WRITEABLE'),
-                       (PAI_ARR_HAS_DESCR, 'ARR_HAS_DESCR')]:
-        if flag & flags:
-            names.append(name)
+    names = [
+        name
+        for flag, name in [
+            (PAI_CONTIGUOUS, 'CONTIGUOUS'),
+            (PAI_FORTRAN, 'FORTRAN'),
+            (PAI_ALIGNED, 'ALIGNED'),
+            (PAI_NOTSWAPPED, 'NOTSWAPPED'),
+            (PAI_WRITEABLE, 'WRITEABLE'),
+            (PAI_ARR_HAS_DESCR, 'ARR_HAS_DESCR'),
+        ]
+        if flag & flags
+    ]
     return ', '.join(names)
 
 def format_shape(nd, shape):
@@ -252,7 +249,7 @@ class Array(Exporter):
             raise ValueError("wrong number of indexes")
         for i in range(self.nd):
             if not (0 <= key[i] < self.shape[i]):
-                raise IndexError("index {} out of range".format(i))
+                raise IndexError(f"index {i} out of range")
         return self.data + sum(i * s for i, s in zip(key, self.strides))
 
 class ExporterTest(unittest.TestCase):
@@ -301,22 +298,16 @@ class ExporterTest(unittest.TestCase):
     def check_args(self, call_flags,
                    shape, typekind, strides, length, bufsize, itemsize,
                    offset=0):
-        if call_flags & 1:
-            typekind_arg = typekind
-        else:
-            typekind_arg = None
-        if call_flags & 2:
-            strides_arg = strides
-        else:
-            strides_arg = None
+        typekind_arg = typekind if call_flags & 1 else None
+        strides_arg = strides if call_flags & 2 else None
         a = Exporter(shape, itemsize=itemsize, strides=strides_arg)
         self.assertEqual(sizeof(a._data), bufsize)
         self.assertEqual(a.data, ctypes.addressof(a._data) + offset)
         m = ArrayInterface(a)
         self.assertEqual(m.data, a.data)
         self.assertEqual(m.itemsize, itemsize)
-        self.assertEqual(tuple(m.shape[0:m.nd]), shape)
-        self.assertEqual(tuple(m.strides[0:m.nd]), strides)
+        self.assertEqual(tuple(m.shape[:m.nd]), shape)
+        self.assertEqual(tuple(m.strides[:m.nd]), strides)
 
 class ArrayTest(unittest.TestCase):
 
@@ -394,8 +385,7 @@ class ArrayTest(unittest.TestCase):
         n = c_uint32(i)
         a[0] = i
         self.assertEqual(a[0], i)
-        self.assertEqual(a._data[0:4],
-                         cast(addressof(n), POINTER(c_uint8))[3:-1:-1])
+        self.assertEqual(a._data[:4], cast(addressof(n), POINTER(c_uint8))[3:-1:-1])
 
 
 if __name__ == '__main__':

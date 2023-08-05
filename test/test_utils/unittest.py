@@ -91,11 +91,19 @@ def geterror():
 ##############################################################################
 # Exported classes and functions
 ##############################################################################
-__all__ = ['TestResult', 'TestCase', 'TestSuite', 'TextTestRunner',
-           'TestLoader', 'FunctionTestCase', 'main', 'defaultTestLoader']
-
-# Expose obsolete functions for backwards compatibility
-__all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
+__all__ = [
+    'TestResult',
+    'TestCase',
+    'TestSuite',
+    'TextTestRunner',
+    'TestLoader',
+    'FunctionTestCase',
+    'main',
+    'defaultTestLoader',
+    'getTestCaseNames',
+    'makeSuite',
+    'findTestCases',
+]
 
 
 
@@ -103,8 +111,7 @@ __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
 def _sort_using_key(seq, key_func):
     deco = [ (key_func(word), i, word) for i, word in enumerate(seq) ]
     deco.sort()
-    new_words = [ word for _, _, word in deco ]
-    return new_words
+    return [ word for _, _, word in deco ]
 
 
 ##############################################################################
@@ -131,7 +138,7 @@ def _sort_using_key(seq, key_func):
 __metaclass__ = type
 
 def _strclass(cls):
-    return "%s.%s" % (cls.__module__, cls.__name__)
+    return f"{cls.__module__}.{cls.__name__}"
 
 __unittest = 1
 
@@ -158,7 +165,6 @@ class TestResult:
 
     def stopTest(self, test):
         "Called when the given test has been run"
-        pass
 
     def addError(self, test, err):
         """Called when an error has occurred. 'err' is a tuple of values as
@@ -173,7 +179,6 @@ class TestResult:
 
     def addSuccess(self, test):
         "Called when a test has completed successfully"
-        pass
 
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
@@ -248,16 +253,13 @@ class TestCase:
             testMethod = getattr(self, methodName)
             self._testMethodDoc = testMethod.__doc__
         except AttributeError:
-            raise ValueError( "no such test method in %s: %s" % \
-                  (self.__class__, methodName))
+            raise ValueError(f"no such test method in {self.__class__}: {methodName}")
 
     def setUp(self):
         "Hook method for setting up the test fixture before exercising it."
-        pass
 
     def tearDown(self):
         "Hook method for deconstructing the test fixture after testing it."
-        pass
 
     def countTestCases(self):
         return 1
@@ -276,14 +278,13 @@ class TestCase:
         return doc and doc.split("\n")[0].strip() or None
 
     def id(self):
-        return "%s.%s" % (_strclass(self.__class__), self._testMethodName)
+        return f"{_strclass(self.__class__)}.{self._testMethodName}"
 
     def __str__(self):
-        return "%s (%s)" % (self._testMethodName, _strclass(self.__class__))
+        return f"{self._testMethodName} ({_strclass(self.__class__)})"
 
     def __repr__(self):
-        return "<%s testMethod=%s>" % \
-               (_strclass(self.__class__), self._testMethodName)
+        return f"<{_strclass(self.__class__)} testMethod={self._testMethodName}>"
 
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
@@ -335,8 +336,6 @@ class TestCase:
            needed.
         """
         exctype, excvalue, tb = sys.exc_info()
-        if sys.platform[:4] == 'java': ## tracebacks look different in Jython
-            return (exctype, excvalue, tb)
         return (exctype, excvalue, tb)
 
     def fail(self, msg=None):
@@ -364,15 +363,14 @@ class TestCase:
         except excClass:
             return
         else:
-            if hasattr(excClass,'__name__'): excName = excClass.__name__
-            else: excName = str(excClass)
-            raise self.failureException( "%s not raised" % excName)
+            excName = excClass.__name__ if hasattr(excClass,'__name__') else str(excClass)
+            raise self.failureException(f"{excName} not raised")
 
     def failUnlessEqual(self, first, second, msg=None):
         """Fail if the two objects are unequal as determined by the '=='
            operator.
         """
-        if not first == second:
+        if first != second:
             raise self.failureException(
                   (msg or '%r != %r' % (first, second)))
 
@@ -441,7 +439,7 @@ class TestSuite:
         self.addTests(tests)
 
     def __repr__(self):
-        return "<%s tests=%s>" % (_strclass(self.__class__), self._tests)
+        return f"<{_strclass(self.__class__)} tests={self._tests}>"
 
     __str__ = __repr__
 
@@ -449,10 +447,7 @@ class TestSuite:
         return iter(self._tests)
 
     def countTestCases(self):
-        cases = 0
-        for test in self._tests:
-            cases += test.countTestCases()
-        return cases
+        return sum(test.countTestCases() for test in self._tests)
 
     def addTest(self, test):
         # sanity checks
@@ -517,10 +512,10 @@ class FunctionTestCase(TestCase):
         return self.__testFunc.__name__
 
     def __str__(self):
-        return "%s (%s)" % (_strclass(self.__class__), self.__testFunc.__name__)
+        return f"{_strclass(self.__class__)} ({self.__testFunc.__name__})"
 
     def __repr__(self):
-        return "<%s testFunc=%s>" % (_strclass(self.__class__), self.__testFunc)
+        return f"<{_strclass(self.__class__)} testFunc={self.__testFunc}>"
 
     def shortDescription(self):
         if self.__description is not None: return self.__description
@@ -607,11 +602,10 @@ class TestLoader:
         elif callable(obj):
             test = obj()
             if not isinstance(test, (TestCase, TestSuite)):
-                raise ValueError(
-                      "calling %s returned %s, not a test" % (obj,test))
+                raise ValueError(f"calling {obj} returned {test}, not a test")
             return test
         else:
-            raise ValueError( "don't know how to make test from: %s" % obj)
+            raise ValueError(f"don't know how to make test from: {obj}")
 
     def loadTestsFromNames(self, names, module=None):
         """Return a suite of all tests cases found using the given sequence
@@ -696,10 +690,7 @@ class _TextTestResult(TestResult):
         self.descriptions = descriptions
 
     def getDescription(self, test):
-        if self.descriptions:
-            return test.shortDescription() or str(test)
-        else:
-            return str(test)
+        return test.shortDescription() or str(test) if self.descriptions else str(test)
 
     def startTest(self, test):
         TestResult.startTest(self, test)
@@ -737,9 +728,9 @@ class _TextTestResult(TestResult):
     def printErrorList(self, flavour, errors):
         for test, err in errors:
             self.stream.writeln(self.separator1)
-            self.stream.writeln("%s: %s" % (flavour, self.getDescription(test)))
+            self.stream.writeln(f"{flavour}: {self.getDescription(test)}")
             self.stream.writeln(self.separator2)
-            self.stream.writeln("%s" % err)
+            self.stream.writeln(f"{err}")
 
 
 class TextTestRunner:
@@ -845,10 +836,7 @@ Examples:
             if len(args) == 0 and self.defaultTest is None:
                 self.test = self.testLoader.loadTestsFromModule(self.module)
                 return
-            if len(args) > 0:
-                self.testNames = args
-            else:
-                self.testNames = (self.defaultTest,)
+            self.testNames = args if len(args) > 0 else (self.defaultTest, )
             self.createTests()
         except getopt.error:
             msg = geterror()

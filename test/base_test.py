@@ -110,11 +110,11 @@ class BaseModuleTest(unittest.TestCase):
 
         _shape = [2, 3, 5, 7, 11]  # Some prime numbers
         for ndim in range(1, len(_shape)):
-            o = Exporter(_shape[0:ndim], 'i', 2)
+            o = Exporter(_shape[:ndim], 'i', 2)
             v = BufferProxy(o)
             self.assertSame(v, o)
         ndim = 2
-        shape = _shape[0:ndim]
+        shape = _shape[:ndim]
         for typechar in ('i', 'u'):
             for itemsize in (1, 2, 4, 8):
                 o = Exporter(shape, typechar, itemsize)
@@ -184,11 +184,11 @@ class BaseModuleTest(unittest.TestCase):
 
         _shape = [2, 3, 5, 7, 11]  # Some prime numbers
         for ndim in range(1, len(_shape)):
-            o = Exporter(_shape[0:ndim], 'i', 2)
+            o = Exporter(_shape[:ndim], 'i', 2)
             v = BufferProxy(o)
             self.assertSame(v, o)
         ndim = 2
-        shape = _shape[0:ndim]
+        shape = _shape[:ndim]
         for typechar in ('i', 'u'):
             for itemsize in (1, 2, 4, 8):
                 o = Exporter(shape, typechar, itemsize)
@@ -245,11 +245,11 @@ class BaseModuleTest(unittest.TestCase):
         Exporter = self.buftools.Exporter
         _shape = [2, 3, 5, 7, 11]  # Some prime numbers
         for ndim in range(1, len(_shape)):
-            o = Exporter(_shape[0:ndim], '=h')
+            o = Exporter(_shape[:ndim], '=h')
             v = BufferProxy(o)
             self.NEWBUF_assertSame(v, o)
         ndim = 2
-        shape = _shape[0:ndim]
+        shape = _shape[:ndim]
         for format in ['b', 'B', '=h', '=H', '=i', '=I', '=q', '=Q', 'f', 'd',
                        '1h', '=1h', 'x', '1x', '2x', '3x', '4x', '5x', '6x',
                        '7x', '8x', '9x']:
@@ -313,10 +313,14 @@ class BaseModuleTest(unittest.TestCase):
         self.assertTrue(b.suboffsets is None)
         self.assertFalse(b.readonly)
         self.assertEqual(b.buf, 9)
-        a = BufferProxy({'typestr': fsys + 'i2',
-                         'shape': (5, 10),
-                         'strides': (24, 2),
-                         'data': (42, False)}) # 42? No data accesses.
+        a = BufferProxy(
+            {
+                'typestr': f'{fsys}i2',
+                'shape': (5, 10),
+                'strides': (24, 2),
+                'data': (42, False),
+            }
+        )
         b = Importer(a, buftools.PyBUF_STRIDES)
         self.assertEqual(b.ndim, 2)
         self.assertTrue(b.format is None)
@@ -355,13 +359,17 @@ class BaseModuleTest(unittest.TestCase):
         self.assertRaises(BufferError, Importer, a,
                           buftools.PyBUF_ANY_CONTIGUOUS)
         self.assertRaises(BufferError, Importer, a, buftools.PyBUF_CONTIG)
-        a = BufferProxy({'typestr': frev + 'i2',
-                         'shape': (3, 5, 10),
-                         'strides': (120, 24, 2),
-                         'data': (1000000, True)}) # 1000000? No data accesses.
+        a = BufferProxy(
+            {
+                'typestr': f'{frev}i2',
+                'shape': (3, 5, 10),
+                'strides': (120, 24, 2),
+                'data': (1000000, True),
+            }
+        )
         b = Importer(a, buftools.PyBUF_FULL_RO)
         self.assertEqual(b.ndim, 3)
-        self.assertEqual(b.format, frev + 'h')
+        self.assertEqual(b.format, f'{frev}h')
         self.assertEqual(b.len, 300)
         self.assertEqual(b.itemsize, 2)
         self.assertEqual(b.shape, (3, 5, 10))
@@ -463,7 +471,7 @@ class BaseModuleTest(unittest.TestCase):
         a = BufferProxy(e)
         b = Importer(a, buftools.PyBUF_FULL_RO)
         self.assertEqual(b.ndim, e.nd)
-        self.assertEqual(b.format, frev + 'h')
+        self.assertEqual(b.format, f'{frev}h')
         self.assertEqual(b.len, e.len)
         self.assertEqual(b.itemsize, e.itemsize)
         self.assertEqual(b.shape, e.shape)
@@ -560,13 +568,7 @@ class BaseModuleTest(unittest.TestCase):
           #
 
         e = pygame.get_error()
-        self.assertTrue(e == "" or
-                        # This may be returned by SDL_mixer built with
-                        # FluidSynth support. Setting environment variable
-                        # SDL_SOUNDFONTS to the path of a valid sound font
-                        # file removes the error message.
-                        e == "No SoundFonts have been requested",
-                        e)
+        self.assertTrue(e in ["", "No SoundFonts have been requested"], e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
         pygame.set_error("")
@@ -577,13 +579,7 @@ class BaseModuleTest(unittest.TestCase):
     def test_set_error(self):
 
         e = pygame.get_error()
-        self.assertTrue(e == "" or
-                        # This may be returned by SDL_mixer built with
-                        # FluidSynth support. Setting environment variable
-                        # SDL_SOUNDFONTS to the path of a valid sf2 file
-                        # removes the error message.
-                        e == "No SoundFonts have been requested",
-                        e)
+        self.assertTrue(e in ["", "No SoundFonts have been requested"], e)
         pygame.set_error("hi")
         self.assertEqual(pygame.get_error(), "hi")
         pygame.set_error("")

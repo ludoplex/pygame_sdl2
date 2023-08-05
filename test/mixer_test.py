@@ -109,37 +109,6 @@ class MixerModuleTest(unittest.TestCase):
 
     def test_get_init__returns_exact_values_used_for_init(self):
         return
-        # fix in 1.9 - I think it's a SDL_mixer bug.
-
-        # TODO: When this bug is fixed, testing through every combination
-        #       will be too slow so adjust as necessary, at the moment it
-        #       breaks the loop after first failure
-
-        configs = []
-        for f in FREQUENCIES:
-            for s in SIZES:
-                for c in CHANNELS:
-                    configs.append ((f,s,c))
-
-        print (configs)
-
-
-        for init_conf in configs:
-            print (init_conf)
-            f,s,c = init_conf
-            if (f,s) == (22050,16):continue
-            mixer.init(f,s,c)
-
-            mixer_conf = mixer.get_init()
-            import time
-            time.sleep(0.1)
-
-            mixer.quit()
-            time.sleep(0.1)
-
-            if init_conf != mixer_conf:
-                continue
-            self.assertEquals(init_conf, mixer_conf)
 
     def test_get_init__returns_None_if_mixer_not_initialized(self):
         self.assert_(mixer.get_init() is None)
@@ -284,7 +253,7 @@ class MixerModuleTest(unittest.TestCase):
         format_list = [-8, 8, -16, 16]
         channels_list = [1, 2]
 
-        a_lists = dict((f, []) for f in format_list)
+        a_lists = {f: [] for f in format_list}
         a32u_mono = arange(0, 256, 1, uint32)
         a16u_mono = a32u_mono.astype(uint16)
         a8u_mono = a32u_mono.astype(uint8)
@@ -368,10 +337,7 @@ class MixerModuleTest(unittest.TestCase):
             snd = mixer.Sound(as_bytes('\x00\x7f') * 20)
             d = snd.__array_interface__
             self.assertTrue(isinstance(d, dict))
-            if pygame.get_sdl_byteorder() == pygame.LIL_ENDIAN:
-                typestr = '<i2'
-            else:
-                typestr = '>i2'
+            typestr = '<i2' if pygame.get_sdl_byteorder() == pygame.LIL_ENDIAN else '>i2'
             self.assertEqual(d['typestr'], typestr)
             self.assertEqual(d['shape'], (20,))
             self.assertEqual(d['strides'], (2,))
@@ -401,10 +367,7 @@ class MixerModuleTest(unittest.TestCase):
 
     def NEWBUF_export_check(self):
         freq, fmt, channels = mixer.get_init()
-        if channels == 1:
-            ndim = 1
-        else:
-            ndim = 2
+        ndim = 1 if channels == 1 else 2
         itemsize = abs(fmt) // 8
         formats = {8: 'B', -8: 'b',
                    16: '=H', -16: '=h',
@@ -418,7 +381,7 @@ class MixerModuleTest(unittest.TestCase):
         fsys, frev = ('<', '>') if is_lil_endian else ('>', '<')
         shape = (10, channels)[:ndim]
         strides = (channels * itemsize, itemsize)[2 - ndim:]
-        exp = Exporter(shape, format=frev + 'i')
+        exp = Exporter(shape, format=f'{frev}i')
         snd = mixer.Sound(array=exp)
         buflen = len(exp) * itemsize * channels
         imp = Importer(snd, buftools.PyBUF_SIMPLE)

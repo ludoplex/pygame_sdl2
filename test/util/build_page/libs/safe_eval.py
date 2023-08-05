@@ -15,7 +15,7 @@ class Unsafe_Source_Error(Exception):
 class SafeEval(object):
     def visit(self, node,**kw):
         cls = node.__class__
-        meth = getattr(self,'visit'+cls.__name__,self.default)
+        meth = getattr(self, f'visit{cls.__name__}', self.default)
         return meth(node, **kw)
             
     def default(self, node, **kw):

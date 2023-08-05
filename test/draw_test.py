@@ -106,7 +106,7 @@ class DrawModuleTest(unittest.TestCase):
                  (a, e), (e, a), (a, f), (f, a),
                  (a, a),]
         for p1, p2 in lines:
-            msg = "%s - %s" % (p1, p2)
+            msg = f"{p1} - {p2}"
             if p1[0] <= p2[0]:
                 plow = p1
                 phigh = p2
@@ -131,17 +131,11 @@ class DrawModuleTest(unittest.TestCase):
             self.assert_(self.surf.get_at(p) == (0, 0, 0), msg)
             p = (phigh[0] + xinc * line_width, phigh[1] + yinc * line_width)
             self.assert_(self.surf.get_at(p) == (0, 0, 0), msg)
-            if p1[0] < p2[0]:
-                rx = p1[0]
-            else:
-                rx = p2[0]
-            if p1[1] < p2[1]:
-                ry = p1[1]
-            else:
-                ry = p2[1]
+            rx = min(p1[0], p2[0])
+            ry = min(p1[1], p2[1])
             w = abs(p2[0] - p1[0]) + 1 + xinc * (line_width - 1)
             h = abs(p2[1] - p1[1]) + 1 + yinc * (line_width - 1)
-            msg += ", %s" % (rec,)
+            msg += f", {rec}"
             self.assert_(rec == (rx, ry, w, h), msg)
         
     def todo_test_aaline(self):

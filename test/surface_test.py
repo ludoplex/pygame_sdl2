@@ -35,15 +35,11 @@ import ctypes
 
 def intify(i):
     """If i is a long, cast to an int while preserving the bits"""
-    if 0x80000000 & i:
-        return int((0xFFFFFFFF & i))
-    return i
+    return int((0xFFFFFFFF & i)) if 0x80000000 & i else i
 
 def longify(i):
     """If i is an int, cast to a long while preserving the bits"""
-    if i < 0:
-        return 0xFFFFFFFF & i
-    return long(i)
+    return 0xFFFFFFFF & i if i < 0 else long(i)
 
 
 class SurfaceTypeTest(unittest.TestCase):
@@ -263,7 +259,8 @@ class SurfaceTypeTest(unittest.TestCase):
 
         for alpha in (0, 32, 127, 255):
             s1.set_alpha(alpha)
-            for t in range(4): s1.set_alpha(s1.get_alpha())
+            for _ in range(4):
+                s1.set_alpha(s1.get_alpha())
             self.assert_(s1.get_alpha() == alpha)
 
     ########################################################################
@@ -492,7 +489,7 @@ class SurfaceTypeTest(unittest.TestCase):
             v = s.get_buffer()
             self.assert_(isinstance(v, BufferProxy))
             self.assertEqual(v.length, length)
-            self.assertEqual(repr(v), "<BufferProxy(" + str(length) + ")>")
+            self.assertEqual(repr(v), f"<BufferProxy({str(length)})>")
 
         # Check for a subsurface (not contiguous)
         s = pygame.Surface((7, 10), 0, 32)
@@ -558,7 +555,8 @@ class SurfaceTypeTest(unittest.TestCase):
 
         for colorkey in colorkeys:
             s.set_colorkey(colorkey)
-            for t in range(4): s.set_colorkey(s.get_colorkey())
+            for _ in range(4):
+                s.set_colorkey(s.get_colorkey())
             self.assertEquals(s.get_colorkey(), colorkey)
 
 
@@ -1074,7 +1072,7 @@ class SurfaceTypeTest(unittest.TestCase):
     def test_set_palette(self):
         palette = [pygame.Color(i, i, i) for i in range(256)]
         palette[10] = tuple(palette[10])      # 4 element tuple
-        palette[11] = tuple(palette[11])[0:3] # 3 element tuple
+        palette[11] = tuple(palette[11])[:3]
 
         surf = pygame.Surface((2, 2), 0, 8)
         pygame.init()
@@ -1090,7 +1088,7 @@ class SurfaceTypeTest(unittest.TestCase):
                                      "palette color %i" % (i,))
             for i in range(10):
                 palette[i] = pygame.Color(255 - i, 0, 0)
-            surf.set_palette(palette[0:10])
+            surf.set_palette(palette[:10])
             for i in range(256):
                 self.failUnlessEqual(surf.map_rgb(palette[i]), i,
                                      "palette color %i" % (i,))
@@ -1119,7 +1117,7 @@ class SurfaceTypeTest(unittest.TestCase):
             next = tuple(original)
             surf.set_palette_at(10, next)
             self.failUnlessEqual(surf.get_palette_at(10), next)
-            next = tuple(original)[0:3]
+            next = tuple(original)[:3]
             surf.set_palette_at(10, next)
             self.failUnlessEqual(surf.get_palette_at(10), next)
             self.failUnlessRaises(IndexError,
@@ -1331,7 +1329,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
         s_shifts = list(s.get_shifts())
 
         # Check for RGB or BGR surface.
-        if s_shifts[0:3] == [0, 8, 16]:
+        if s_shifts[:3] == [0, 8, 16]:
             if self.lilendian:
                 # RGB
                 offset = 0
@@ -1340,7 +1338,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
                 # BGR
                 offset = s_bytesize - 1
                 step = -1
-        elif s_shifts[0:3] == [8, 16, 24]:
+        elif s_shifts[:3] == [8, 16, 24]:
             if self.lilendian:
                 # xRGB
                 offset = 1
@@ -1349,7 +1347,7 @@ class SurfaceGetBufferTest (unittest.TestCase):
                 # BGRx
                 offset = s_bytesize - 2
                 step = -1
-        elif s_shifts[0:3] == [16, 8, 0]:
+        elif s_shifts[:3] == [16, 8, 0]:
             if self.lilendian:
                 # BGR
                 offset = 2
@@ -1358,15 +1356,9 @@ class SurfaceGetBufferTest (unittest.TestCase):
                 # RGB
                 offset = s_bytesize - 3
                 step = 1
-        elif s_shifts[0:3] == [24, 16, 8]:
-            if self.lilendian:
-                # BGRx
-                offset = 2
-                step = -1
-            else:
-                # RGBx
-                offset = s_bytesize - 4
-                step = -1
+        elif s_shifts[:3] == [24, 16, 8]:
+            offset = 2 if self.lilendian else s_bytesize - 4
+            step = -1
         else:
             return
 
@@ -1437,13 +1429,13 @@ class SurfaceGetBufferTest (unittest.TestCase):
         s = pygame.Surface(sz, 0, 32)
         s_masks = list(s.get_masks())
         masks = [0xff, 0xff00, 0xff0000]
-        if s_masks[0:3] == masks or s_masks[0:3] == masks[::-1]:
+        if s_masks[:3] in [masks, masks[::-1]]:
             masks = s_masks[2::-1] + s_masks[3:4]
             self._check_interface_3D(pygame.Surface(sz, 0, 32, masks))
         s = pygame.Surface(sz, 0, 24)
         s_masks = list(s.get_masks())
         masks = [0xff, 0xff00, 0xff0000]
-        if s_masks[0:3] == masks or s_masks[0:3] == masks[::-1]:
+        if s_masks[:3] in [masks, masks[::-1]]:
             masks = s_masks[2::-1] + s_masks[3:4]
             self._check_interface_3D(pygame.Surface(sz, 0, 24, masks))
 
@@ -1683,20 +1675,17 @@ class SurfaceGetBufferTest (unittest.TestCase):
         Importer = buftools.Importer
         s = pygame.Surface((12, 6), 0, 24)
         rmask, gmask, bmask, amask = s.get_masks()
-        if (self.lilendian):
-            if (rmask == 0x0000ff):
-                color_step = 1
-                addr_offset = 0
-            else:
-                color_step = -1
-                addr_offset = 2
+        if (
+            self.lilendian
+            and (rmask == 0x0000FF)
+            or not self.lilendian
+            and (rmask == 0xFF0000)
+        ):
+            color_step = 1
+            addr_offset = 0
         else:
-            if (rmask == 0xff0000):
-                color_step = 1
-                addr_offset = 0
-            else:
-                color_step = -1
-                addr_offset = 2
+            color_step = -1
+            addr_offset = 2
         a = s.get_view('3')
         b = Importer(a, buftools.PyBUF_STRIDES)
         w, h = s.get_size()
@@ -1737,16 +1726,15 @@ class SurfaceGetBufferTest (unittest.TestCase):
         Importer = buftools.Importer
         s = pygame.Surface((12, 6), 0, 24)
         rmask, gmask, bmask, amask = s.get_masks()
-        if (self.lilendian):
-            if (rmask == 0x0000ff):
-                addr_offset = 0
-            else:
-                addr_offset = 2
+        if (
+            self.lilendian
+            and (rmask == 0x0000FF)
+            or not self.lilendian
+            and (rmask == 0xFF0000)
+        ):
+            addr_offset = 0
         else:
-            if (rmask == 0xff0000):
-                addr_offset = 0
-            else:
-                addr_offset = 2
+            addr_offset = 2
         a = s.get_view('R')
         b = Importer(a, buftools.PyBUF_STRIDES)
         w, h = s.get_size()
@@ -1897,7 +1885,7 @@ class SurfaceBlendTest (unittest.TestCase):
             dst.blit(src,
                      (0, 0),
                      special_flags=getattr(pygame, blend_name))
-            self._assert_surface(dst, p, ", %s" % blend_name)
+            self._assert_surface(dst, p, f", {blend_name}")
 
         # Blend blits are special cased for 32 to 32 bit surfaces.
         #
@@ -1922,7 +1910,7 @@ class SurfaceBlendTest (unittest.TestCase):
             dst.blit(src,
                      (0, 0),
                      special_flags=getattr(pygame, blend_name))
-            self._assert_surface(dst, p, ", %s" % blend_name)
+            self._assert_surface(dst, p, f", {blend_name}")
 
     def test_blit_blend_rgba(self):
         sources = [self._make_src_surface(8),
@@ -1979,13 +1967,15 @@ class SurfaceBlendTest (unittest.TestCase):
         dst = pygame.Surface(src.get_size(), SRCALPHA, 32,
                              (masks[1], masks[2], masks[3], masks[0]))
         for blend_name, dst_color, op in blend:
-            p = [tuple([op(dst_color[i], src_color[i]) for i in range(4)])
-                 for src_color in self._test_palette]
+            p = [
+                tuple(op(dst_color[i], src_color[i]) for i in range(4))
+                for src_color in self._test_palette
+            ]
             dst.fill(dst_color)
             dst.blit(src,
                      (0, 0),
                      special_flags=getattr(pygame, blend_name))
-            self._assert_surface(dst, p, ", %s" % blend_name)
+            self._assert_surface(dst, p, f", {blend_name}")
 
         # Confirm this special case handles subsurfaces.
         src = pygame.Surface((8, 10), SRCALPHA, 32)
@@ -2091,7 +2081,7 @@ class SurfaceBlendTest (unittest.TestCase):
                     c = dst.unmap_rgb(dst.map_rgb(c))
                     p.append(c)
                 dst.fill(fill_color, special_flags=getattr(pygame, blend_name))
-                self._assert_surface(dst, p, ", %s" % blend_name)
+                self._assert_surface(dst, p, f", {blend_name}")
 
     def test_fill_blend_rgba(self):
         destinations = [self._make_surface(8),
@@ -2123,7 +2113,7 @@ class SurfaceBlendTest (unittest.TestCase):
                     c = dst.unmap_rgb(dst.map_rgb(c))
                     p.append(c)
                 dst.fill(fill_color, special_flags=getattr(pygame, blend_name))
-                self._assert_surface(dst, p, ", %s" % blend_name)
+                self._assert_surface(dst, p, f", {blend_name}")
 
 class SurfaceSelfBlitTest(unittest.TestCase):
     """Blit to self tests.
@@ -2344,13 +2334,9 @@ class SurfaceFillTest(unittest.TestCase):
             # Update the display so we can see the results
             pygame.display.flip()
 
-            # Compare colors on both sides of window
-            y = 5
-            while y < 480:
+            for y in range(5, 480, 10):
                 self.assertEquals(screen.get_at((10, y)),
                         screen.get_at((330, 480 - y)))
-                y += 10
-
         finally:
             pygame.quit()
 

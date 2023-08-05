@@ -36,20 +36,20 @@ class MixerMusicModuleTest(unittest.TestCase):
         formats = ['ogg', 'wav']
 
         for f in formats:
-            path = os.path.join(data_fname, 'house_lo.%s' % f)
+            path = os.path.join(data_fname, f'house_lo.{f}')
             if os.sep == '\\':
                 path = path.replace('\\', '\\\\')
             umusfn = as_unicode(path)
             bmusfn = filesystem_encode(umusfn) 
-    
+
             pygame.mixer.music.load(umusfn)
             pygame.mixer.music.load(bmusfn)
 
-            #NOTE: TODO: loading from filelikes are disabled...
-            # because as of writing it only works in SDL_mixer svn.
-            #pygame.mixer.music.load(open(musfn))
-            #musf = open(musfn)
-            #pygame.mixer.music.load(musf)
+                #NOTE: TODO: loading from filelikes are disabled...
+                # because as of writing it only works in SDL_mixer svn.
+                #pygame.mixer.music.load(open(musfn))
+                #musf = open(musfn)
+                #pygame.mixer.music.load(musf)
         pygame.mixer.quit()
 
     def todo_test_queue(self):

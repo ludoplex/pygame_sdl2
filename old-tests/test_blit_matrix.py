@@ -61,10 +61,7 @@ def draw():
             surf = case(src_alpha, dst_alpha, colorkey, alpha)
             screen.blit(surf, (xi * 250 + 50, yi * 250 + 50))
 
-            s = "src={}, dst={}".format(
-                "RGBA" if src_alpha else "RGB",
-                "RGBA" if dst_alpha else "RGB",
-                )
+            s = f'src={"RGBA" if src_alpha else "RGB"}, dst={"RGBA" if dst_alpha else "RGB"}'
 
             surf = f.render(s, True, (255, 255, 255, 255))
             screen.blit(surf, (xi * 250 + 50, yi * 250 + 30))
@@ -95,11 +92,7 @@ def main():
         ev = pygame.event.wait()
 
         if ev.type == pygame.KEYDOWN:
-            if A == 255:
-                A = 128
-            else:
-                A = 255
-
+            A = 128 if A == 255 else 255
             draw()
 
         if ev.type == pygame.QUIT:

@@ -103,7 +103,6 @@ class Exporter(pygame.newbuffer.BufferMixin):
         if readonly is None:
             readonly = False
         prefix = ''
-        typecode = ''
         i = 0
         if i < len(format):
             try:
@@ -113,13 +112,12 @@ class Exporter(pygame.newbuffer.BufferMixin):
                 pass
         if i < len(format) and format[i] == '1':
             i += 1
-        if i == len(format) - 1:
-            typecode = format[i]
+        typecode = format[i] if i == len(format) - 1 else ''
         if itemsize is None:
             try:
                 itemsize = ctypes.sizeof(self.types[prefix + typecode])
             except KeyError:
-                raise ValueError("Unknown item format '" + format + "'")
+                raise ValueError(f"Unknown item format '{format}'")
         self.readonly = bool(readonly)
         self.format = format
         self._format = ctypes.create_string_buffer(format.encode('latin_1'))
@@ -150,7 +148,7 @@ class Exporter(pygame.newbuffer.BufferMixin):
         return (addressof(self.buffer), self.shape[0])
 
     def tobytes(self):
-        return cast(self.buffer, POINTER(c_char))[0:self._len]
+        return cast(self.buffer, POINTER(c_char))[:self._len]
 
     def __len__(self):
         return self.shape[0]
@@ -171,10 +169,7 @@ class Exporter(pygame.newbuffer.BufferMixin):
         view.buf = self.buf
         view.readonly = self.readonly
         view.len = self.len
-        if flags | PyBUF_WRITABLE == PyBUF_WRITABLE:
-            view.ndim = 0
-        else:
-            view.ndim = self.ndim
+        view.ndim = 0 if flags | PyBUF_WRITABLE == PyBUF_WRITABLE else self.ndim
         view.itemsize = self.itemsize
         if (flags & PyBUF_FORMAT) == PyBUF_FORMAT:
             view.format = addressof(self._format)
@@ -185,8 +180,7 @@ class Exporter(pygame.newbuffer.BufferMixin):
         elif self.is_contiguous('C'):
             view.shape = None
         else:
-            raise BufferError(
-                "shape required for {} dimensional data".format(self.ndim))
+            raise BufferError(f"shape required for {self.ndim} dimensional data")
         if (flags & PyBUF_STRIDES) == PyBUF_STRIDES:
             view.strides = ctypes.addressof(self._strides)
         elif view.shape is None or self.is_contiguous('C'):
@@ -277,7 +271,7 @@ class Importer(object):
 
         if addr is None:
             return None
-        return tuple(cast(addr, POINTER(c_ssize_t))[0:self._view.ndim])
+        return tuple(cast(addr, POINTER(c_ssize_t))[:self._view.ndim])
 
 
 class ExporterTest(unittest.TestCase):

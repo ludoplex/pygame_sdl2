@@ -19,8 +19,7 @@ def main():
     colors = {}
     with open(args.rgb_txt, "r") as fin:
         for l in fin:
-            m = re.match(r'\s*(\d+)\s+(\d+)\s+(\d+)\s+(.+)', l)
-            if m:
+            if m := re.match(r'\s*(\d+)\s+(\d+)\s+(\d+)\s+(.+)', l):
                 r, g, b, name = m.groups()
                 name = "".join(name.split()).lower()
                 colors[name] = (int(r), int(g), int(b))
@@ -28,7 +27,7 @@ def main():
     with util.open_include("color_dict.pxi") as fout:
         fout.write("cdef object colors = {\n")
         for k in sorted(colors.keys()):
-            fout.write("    '{}' : {},\n".format(k, colors[k]))
+            fout.write(f"    '{k}' : {colors[k]},\n")
         fout.write("}\n")
 
 if __name__ == "__main__":

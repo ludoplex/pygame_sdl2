@@ -57,11 +57,7 @@ def init(number_of_workers = 0):
     """
     global _wq, _use_workers
 
-    if number_of_workers:
-        _use_workers = number_of_workers
-    else:
-        _use_workers = benchmark_workers()
-
+    _use_workers = number_of_workers if number_of_workers else benchmark_workers()
     # if it is best to use zero workers, then use that.
     _wq = WorkerQueue(_use_workers)
 
@@ -123,7 +119,7 @@ def benchmark_workers(a_bench_func = None, the_data = None):
         wq = WorkerQueue(num_workers)
         t1 = time.time()
         for xx in range(20):
-            print ("active count:%s" % threading.activeCount())
+            print(f"active count:{threading.activeCount()}")
             results = tmap(doit, thedata, worker_queue = wq)
         t2 = time.time()
 
@@ -131,7 +127,7 @@ def benchmark_workers(a_bench_func = None, the_data = None):
 
 
         total_time = t2 - t1
-        print ("total time num_workers:%s: time:%s:" % (num_workers, total_time))
+        print(f"total time num_workers:{num_workers}: time:{total_time}:")
 
         if total_time < best:
             last_best = best_number
@@ -162,9 +158,7 @@ class WorkerQueue(object):
         """
         self.pool = []
 
-        for _ in range(num_workers):
-            self.pool.append(Thread(target=self.threadloop))
-
+        self.pool.extend(Thread(target=self.threadloop) for _ in range(num_workers))
         for a_thread in self.pool:
             a_thread.setDaemon(True)
             a_thread.start()
@@ -248,15 +242,13 @@ def tmap(f, seq_args, num_workers = 20, worker_queue = None, wait = True, stop_o
 
     if worker_queue:
         wq = worker_queue
-    else:
-        # see if we have a global queue to work with.
-        if _wq:
-            wq = _wq
-        else:
-            if num_workers == 0:
-                return map(f, seq_args)
+    elif _wq:
+        wq = _wq
+    elif num_workers == 0:
+        return map(f, seq_args)
 
-            wq = WorkerQueue(num_workers)
+    else:
+        wq = WorkerQueue(num_workers)
 
     # we short cut it here if the number of workers is 0.
     # normal map should be faster in this case.
@@ -278,33 +270,26 @@ def tmap(f, seq_args, num_workers = 20, worker_queue = None, wait = True, stop_o
         wq.do(results[-1], sa)
 
 
-    #wq.stop()
-
-    if wait:
-        #print ("wait")
-        wq.wait()
-        #print ("after wait")
-        #print ("queue size:%s" % wq.queue.qsize())
-        if wq.queue.qsize():
-            raise Exception("buggy threadmap")
-        # if we created a worker queue, we need to stop it.
-        if not worker_queue and not _wq:
-            #print ("stoping")
-            wq.stop()
-            if wq.queue.qsize():
-                um = wq.queue.get()
-                if not um is STOP:
-                    raise Exception("buggy threadmap")
-        
-        
-        # see if there were any errors.  If so raise the first one.  This matches map behaviour.
-        # TODO: the traceback doesn't show up nicely.
-        # NOTE: TODO: we might want to return the results anyway?  This should be an option.
-        if stop_on_error:
-            error_ones = list(filter(lambda x:x.exception, results))
-            if error_ones:
-                raise error_ones[0].exception
-        
-        return map(lambda x:x.result, results)
-    else:
+    if not wait:
         return [wq, results]
+    #print ("wait")
+    wq.wait()
+    #print ("after wait")
+    #print ("queue size:%s" % wq.queue.qsize())
+    if wq.queue.qsize():
+        raise Exception("buggy threadmap")
+        # if we created a worker queue, we need to stop it.
+    if not worker_queue and not _wq:
+        #print ("stoping")
+        wq.stop()
+        if wq.queue.qsize():
+            um = wq.queue.get()
+            if um is not STOP:
+                raise Exception("buggy threadmap")
+
+
+    if stop_on_error:
+        if error_ones := list(filter(lambda x: x.exception, results)):
+            raise error_ones[0].exception
+
+    return map(lambda x:x.result, results)

@@ -24,7 +24,7 @@ def re_sub_file(file_path, match, replace):
 
 def assert_path_exists(path, description):
     if not os.path.exists(path):
-        raise Exception("ERROR: can't find "+description+" at : "+path)
+        raise Exception(f"ERROR: can't find {description} at : {path}")
 
 def cleardir(path_to_clear):
     for root, dirs, files in os.walk(path_to_clear, topdown=False):
@@ -70,7 +70,5 @@ class ProgressIndicator(object):
 
 ################################################################################
 
-if __name__ == '__main__':
-    pass
     
 ################################################################################

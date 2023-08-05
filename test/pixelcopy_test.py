@@ -164,8 +164,8 @@ class PixelcopyModuleTest (unittest.TestCase):
             surface_to_array(view, surf)
             self.assertFalse(surf.get_locked())
             for posn, i in self.test_points:
-                sc = surf.get_at(posn)[0:3]
-                dc = dst.get_at(posn)[0:3]
+                sc = surf.get_at(posn)[:3]
+                dc = dst.get_at(posn)[:3]
                 self.assertEqual(dc, sc,
                                  "%s != %s: flags: %i"
                                  ", bpp: %i, posn: %s" %

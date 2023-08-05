@@ -3,8 +3,7 @@
 import re
 
 def Regex(string, test, flags=None):
-    if flags: regex = re.compile(string, flags)
-    else:     regex = re.compile(string)
+    regex = re.compile(string, flags) if flags else re.compile(string)
     assert regex.search(test)
     return regex
 

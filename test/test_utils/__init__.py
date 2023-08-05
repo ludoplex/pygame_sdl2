@@ -32,10 +32,7 @@ def geterror():
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 trunk_dir = os.path.split(os.path.split(this_dir)[0])[0]
-if is_pygame_pkg:
-    test_module = 'tests'
-else:
-    test_module = 'test'
+test_module = 'tests' if is_pygame_pkg else 'test'
 
 def trunk_relative_path(relative):
     return os.path.normpath(os.path.join(trunk_dir, relative))
@@ -67,10 +64,10 @@ def get_tmp_dir():
 ################################################################################
 
 def question(q):
-    return raw_input_('%s ' % q.rstrip(' ')).lower().strip() == 'y'
+    return raw_input_(f"{q.rstrip(' ')} ").lower().strip() == 'y'
 
 def prompt(p):
-    return raw_input_('%s (and press enter to continue) ' % p.rstrip(' '))
+    return raw_input_(f"{p.rstrip(' ')} (and press enter to continue) ")
 
 #################################### HELPERS ###################################
 
@@ -118,18 +115,7 @@ def unordered_equality(seq1, seq2):
 
     """
 
-    if len(seq1) != len(seq2):
-        return False
-
-    # if isinstance(seq1, dict) and isinstance(seq2, dict):
-    #    seq1 = seq1.items()
-    #    seq2 = seq2.items()
-
-    for val in seq1:
-        if val not in seq2:
-            return False
-
-    return True
+    return False if len(seq1) != len(seq2) else all(val in seq2 for val in seq1)
 
 def rect_area_pts(rect):
     for l in xrange_(rect.left, rect.right):
@@ -159,7 +145,7 @@ def rect_perimeter_pts(rect):
     )
 
     for line in clock_wise_from_top_left:
-        for pt in line: yield pt
+        yield from line
 
 def rect_outer_bounds(rect):
     """

@@ -71,9 +71,9 @@ class FasteventModuleTest(unittest.TestCase):
         )
     
     def test_post(self):
-    
+
         # __doc__ (as of 2008-08-02) for pygame.fastevent.post:
-    
+
           # pygame.fastevent.post(Event) -> None
           # place an event on the queue
           # 
@@ -89,10 +89,10 @@ class FasteventModuleTest(unittest.TestCase):
           # event on to a full queue from the thread that processes events.
           # For that reason I do not recommend using this function in the
           # main thread of an SDL program.
-    
+
         for _ in range(1, 11):
             fastevent.post(event.Event(pygame.USEREVENT))
-        
+
         self.assertEquals (
             [e.type for e in event.get()], [pygame.USEREVENT] * 10,
             race_condition_notification
@@ -103,8 +103,7 @@ class FasteventModuleTest(unittest.TestCase):
             fastevent.post(1)
         except TypeError:
             e = geterror()
-            msg = ("argument 1 must be %s, not %s" %
-                   (fastevent.Event.__name__, type(1).__name__))
+            msg = f"argument 1 must be {fastevent.Event.__name__}, not {type(1).__name__}"
             self.failUnlessEqual(str(e), msg)
         else:
             self.fail()

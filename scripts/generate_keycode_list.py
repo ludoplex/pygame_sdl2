@@ -13,11 +13,11 @@ def main():
     args = ap.parse_args()
 
     # Just match SDLK_*
-    with open(args.keycode_h, "r") as fin, util.open_include("keycode_list.pxi") as fout:
+    with (open(args.keycode_h, "r") as fin, util.open_include("keycode_list.pxi") as fout):
         for l in fin:
             if l.startswith("    SDLK_"):
                 kc = l.split()[0]
-                fout.write("{} = {}\n".format(kc[3:], kc))
+                fout.write(f"{kc[3:]} = {kc}\n")
 
 if __name__ == "__main__":
     main()

@@ -11,10 +11,10 @@ def main():
 
     with open(os.path.join(ROOT, "include", "controller.pxi"), "w") as f:
         for name in enums["SDL_GameControllerButton"]:
-            f.write("{} = {}\n".format(name[4:], name))
+            f.write(f"{name[4:]} = {name}\n")
 
         for name in enums["SDL_GameControllerAxis"]:
-            f.write("{} = {}\n".format(name[4:], name))
+            f.write(f"{name[4:]} = {name}\n")
 
 if __name__ == "__main__":
     main()

@@ -159,21 +159,6 @@ class ThreadsModuleTest(unittest.TestCase):
     def test_tmap__None_func_and_multiple_sequences(self):
         return     #TODO
         
-        """ Using a None as func and multiple seqences """
-
-        res =  tmap(None, [1,2,3,4])
-
-        res2 = tmap(None, [1,2,3,4], [22, 33, 44, 55])
-        
-        res3 = tmap(None, [1,2,3,4], [22, 33, 44, 55, 66])
-        
-        res4 = tmap(None, [1,2,3,4,5], [22, 33, 44, 55])
-        
-        self.assertEqual([1, 2, 3, 4], res)
-        self.assertEqual([(1, 22), (2, 33), (3, 44), (4, 55)], res2)
-        self.assertEqual([(1, 22), (2, 33), (3, 44), (4, 55), (None, 66)], res3)
-        self.assertEqual([(1, 22), (2, 33), (3, 44), (4, 55), (5,None)], res4)
-        
     def test_tmap__wait(self):
         r = range(1000)
         wq, results = tmap(lambda x:x, r, num_workers = 5, wait=False)
